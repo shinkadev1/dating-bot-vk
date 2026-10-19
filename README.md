@@ -1,14 +1,13 @@
 # Бот ВК
 
 Принимает сообщения сообщества ВК и передаёт их в Dating API (репозиторий `dating-api`).
-Очередь и пары живут в Chat API. Бот вызывает REST и читает события из Redis Streams.
-
-На сервере контейнер `vk-bot` подключается к сети Compose Chat API и видит `chat-api` и `redis`.
+Очередь и пары живут в Chat API. Redis тоже остаётся там. Бот запускается своим Compose
+и получает события по WebSocket `/api/v1/events/vk` и `/api/v1/broadcasts/vk`.
 
 ## Локальный запуск
 
-Сначала поднимите Chat API: он создаёт сеть `vk-bot_default`.
 `CHAT_API_SERVICE_TOKEN` в `.env` должен совпадать с токеном Chat API.
+Для публичного адреса нужны `CF_ACCESS_CLIENT_ID` и `CF_ACCESS_CLIENT_SECRET`.
 
 ```sh
 cp .env.example .env
@@ -17,12 +16,11 @@ docker compose up --build
 
 ## Прод
 
-Push в `master` собирает образ `dating-bot` и перезапускает контейнер на сервере Chat API.
+Push в `master` собирает образ `dating-bot` и перезапускает контейнер на сервере бота.
 
 Секреты GitHub:
 
 - `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
-- `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` — SSH на сервер Chat API
+- `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` — SSH на сервер бота
 - `DEPLOY_PATH` — каталог бота, по умолчанию `~/dating-bot-vk`
-- `CHAT_APP_DIR` — каталог Chat API, по умолчанию `~/dating-bot`. Оттуда читается `CHAT_API_SERVICE_TOKEN`
-- `ENV_FILE` — токены сообществ ВК
+- `ENV_FILE` — `VK_TOKEN`, `CHAT_API_SERVICE_TOKEN`, `CHAT_API_URL`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`

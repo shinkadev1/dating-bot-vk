@@ -92,7 +92,6 @@ jobs:
         uses: appleboy/ssh-action@v1.2.2
         env:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          CHAT_APP_DIR: ${{ secrets.CHAT_APP_DIR }}
           ENV_FILE_B64: ${{ steps.envfile.outputs.b64 }}
           GIT_SHA: ${{ github.sha }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -103,7 +102,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           command_timeout: 20m
-          envs: DEPLOY_PATH,CHAT_APP_DIR,ENV_FILE_B64,GIT_SHA,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
+          envs: DEPLOY_PATH,ENV_FILE_B64,GIT_SHA,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           script: |
             set -eu
             APP_DIR="${DEPLOY_PATH:-${HOME}/dating-bot-vk}"

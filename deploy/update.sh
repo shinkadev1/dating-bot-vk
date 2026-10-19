@@ -1,5 +1,6 @@
 #!/bin/sh
-# Бот ВК на сервере Chat API: скачивает образ и перезапускает контейнер в сети Chat API.
+# Бот ВК на своём сервере. Chat API и Redis остаются в своём Compose:
+# события из Redis бот получает по WebSocket Chat API.
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -15,25 +16,6 @@ fi
 
 git fetch origin "$GIT_SHA"
 git checkout --detach --force "$GIT_SHA"
-
-CHAT_DIR="${CHAT_APP_DIR:-${HOME}/dating-bot}"
-if [ ! -f "$CHAT_DIR/.env" ]; then
-  echo "Нет $CHAT_DIR/.env — оттуда берётся CHAT_API_SERVICE_TOKEN." >&2
-  exit 1
-fi
-
-chat_env() {
-  sed -n "s/^${1}=//p" "$CHAT_DIR/.env" | tail -n 1
-}
-
-CHAT_API_SERVICE_TOKEN=$(chat_env CHAT_API_SERVICE_TOKEN)
-if [ -z "$CHAT_API_SERVICE_TOKEN" ]; then
-  echo "В $CHAT_DIR/.env нет CHAT_API_SERVICE_TOKEN." >&2
-  exit 1
-fi
-
-# Имя сети совпадает с каталогом Chat API: docker compose без -p называет проект по каталогу.
-CHAT_NETWORK="${CHAT_NETWORK:-$(basename "$CHAT_DIR")_default}"
 
 set_env() {
   key=$1
@@ -70,6 +52,13 @@ apply_secret_tokens() {
     [ -z "$line" ] && continue
     case "$line" in
       \#*) continue ;;
+      CHAT_API_SERVICE_TOKEN=*|CHAT_API_URL=*|CF_ACCESS_CLIENT_ID=*|CF_ACCESS_CLIENT_SECRET=*)
+        key=${line%%=*}
+        value=${line#*=}
+        value=$(printf '%s' "$value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/^"//;s/"$//')
+        [ -n "$value" ] && set_env "$key" "$value"
+        continue
+        ;;
     esac
     value=$line
     known=yes
@@ -122,11 +111,20 @@ if ! grep -qE '^VK_TOKEN=.+' .env 2>/dev/null; then
   exit 1
 fi
 
+if ! grep -qE '^CHAT_API_SERVICE_TOKEN=.+' .env 2>/dev/null; then
+  echo "В секрете ENV_FILE нет CHAT_API_SERVICE_TOKEN." >&2
+  exit 1
+fi
+if ! grep -qE '^CHAT_API_URL=.+' .env 2>/dev/null; then
+  set_env CHAT_API_URL "https://api.chatwithyou.site"
+fi
+if grep -qE '^CHAT_API_URL=.*chatwithyou\.site' .env \
+  && { ! grep -qE '^CF_ACCESS_CLIENT_ID=.+' .env || ! grep -qE '^CF_ACCESS_CLIENT_SECRET=.+' .env; }; then
+  echo "Для https://api.chatwithyou.site в ENV_FILE нужны CF_ACCESS_CLIENT_ID и CF_ACCESS_CLIENT_SECRET." >&2
+  exit 1
+fi
+
 set_env BOT_IMAGE "$BOT_IMAGE"
-set_env CHAT_API_SERVICE_TOKEN "$CHAT_API_SERVICE_TOKEN"
-set_env CHAT_NETWORK "$CHAT_NETWORK"
-set_env CHAT_API_URL "http://chat-api:8000"
-set_env REDIS_URL "redis://redis:6379/0"
 
 if [ -n "${DOCKERHUB_USERNAME:-}" ] && [ -n "${DOCKERHUB_TOKEN:-}" ]; then
   printf '%s' "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
@@ -139,7 +137,7 @@ docker rm -f vk-bot >/dev/null 2>&1 || true
 docker compose up -d --no-build --force-recreate bot
 
 sleep 8
-docker logs vk-bot --tail 80 2>&1 | grep -E "Токенов ВК|VK:|Chat API|События|пропущен|Нет доступа|Токен невалиден|Бот запущен|Ошибка запуска|VK Error|Traceback" || true
+docker logs vk-bot --tail 80 2>&1 | grep -E "Токенов ВК|VK:|Chat API|WebSocket|пропущен|Нет доступа|Токен невалиден|Бот запущен|Ошибка запуска|VK Error|Traceback" || true
 
 current_tag=${BOT_IMAGE##*:}
 docker images --format '{{.Repository}}:{{.Tag}}' | grep '/dating-bot:' | grep -v ':local$' | grep -v ":${current_tag}\$" \

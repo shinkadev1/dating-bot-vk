@@ -7,7 +7,7 @@ from typing import Any
 
 import httpx
 
-from app.config import CHAT_API_SERVICE_TOKEN, CHAT_API_URL
+from app.config import CHAT_API_SERVICE_TOKEN, CHAT_API_URL, chat_api_headers
 from app.peer import Peer
 
 
@@ -29,7 +29,7 @@ class ChatApiClient:
     def __init__(self, base_url: str, token: str, *, timeout: float = 10.0) -> None:
         self._http = httpx.AsyncClient(
             base_url=f"{base_url.rstrip('/')}/api/v1",
-            headers={"Authorization": f"Bearer {token}"},
+            headers=chat_api_headers(token),
             timeout=timeout,
         )
 

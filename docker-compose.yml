@@ -1,6 +1,5 @@
-# Бот ВК. Chat API и Redis живут в репозитории Chat API.
-# Общая сеть задаётся CHAT_NETWORK: бот ходит на http://chat-api:8000 и redis://redis:6379/0.
-# Локально: сначала поднять Chat API, затем docker compose up --build
+# Бот ВК запускается отдельно от Compose Chat API.
+# Redis остаётся у Chat API. События бот читает по WebSocket того же API.
 
 name: dating-bot-vk
 
@@ -14,12 +13,6 @@ services:
       VK_TOKEN: ${VK_TOKEN:-}
       VK_TOKENS: ${VK_TOKENS:-}
       CHAT_API_SERVICE_TOKEN: ${CHAT_API_SERVICE_TOKEN:?Задайте CHAT_API_SERVICE_TOKEN в .env}
-      CHAT_API_URL: ${CHAT_API_URL:-http://chat-api:8000}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
-    networks:
-      - chat
-
-networks:
-  chat:
-    external: true
-    name: ${CHAT_NETWORK:?Задайте CHAT_NETWORK — сеть Docker Compose Chat API}
+      CHAT_API_URL: ${CHAT_API_URL:-https://api.chatwithyou.site}
+      CF_ACCESS_CLIENT_ID: ${CF_ACCESS_CLIENT_ID:-}
+      CF_ACCESS_CLIENT_SECRET: ${CF_ACCESS_CLIENT_SECRET:-}

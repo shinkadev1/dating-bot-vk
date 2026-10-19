@@ -1,36 +1,27 @@
-"""Доставка событий Chat API в ВК из Redis Streams."""
+"""Доставка событий Chat API в ВК. События лежат в Redis, бот читает их по WebSocket.
+
+Бот запускается отдельно от Compose Chat API, поэтому к Redis он не подключается:
+тот же поток отдаёт `/api/v1/events/vk`.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import json
+from urllib.parse import quote
 
-from redis.asyncio import Redis
-from redis.exceptions import ResponseError
+from websockets.asyncio.client import connect
 
 from app.api_client import ChatApiError, chat_api
-from app.config import EVENTS_CONSUMER, REDIS_URL
+from app.config import CHAT_API_URL, EVENTS_CONSUMER, chat_api_headers
 from app.gateway import gateway
 from app.handlers import cancel_search_timeout
 from app.peer import Peer
 from app.ui import FOUND_TEXT, PARTNER_LEFT_TEXT, UNDELIVERED_TEXT, format_partner
 
-_GROUP = "bots"
-_STREAM = "chat:events:vk"
-_BROADCAST_STREAM = "chat:broadcast:vk"
-_PENDING = "0"
-_NEW = ">"
-_BLOCK_MS = 5000
+_RECONNECT_DELAY_SECONDS = 3.0
 # Живые реплики идут тем же токеном сообщества. 10 сообщений/с оставляют запас под диалоги.
 _NOTICE_INTERVAL = 0.1
-
-
-async def _ensure_group(redis: Redis, stream: str, start: str = "$") -> None:
-    try:
-        await redis.xgroup_create(stream, _GROUP, id=start, mkstream=True)
-    except ResponseError as exc:
-        if "BUSYGROUP" not in str(exc):
-            raise
 
 
 async def _deliver(body: dict) -> None:
@@ -75,51 +66,47 @@ async def _deliver_notice(body: dict) -> None:
     await gateway.send(peer, text, "line")
 
 
-async def _handle(fields: dict, deliver) -> None:
+async def _handle(event: dict) -> None:
     try:
-        await deliver(json.loads(fields["data"]))
+        await _deliver(event)
     except Exception as exc:  # noqa: BLE001 — битое событие не должно стопорить очередь
-        print(f"Не обработал событие {fields!r}: {type(exc).__name__}: {exc}", flush=True)
+        print(f"Не обработал событие {event!r}: {type(exc).__name__}: {exc}", flush=True)
 
 
-async def _consume(stream: str, deliver, *, start: str = "$") -> None:
-    """Сначала дочитывает события, не подтверждённые до перезапуска, потом ждёт новые."""
-    # Таймаут сокета длиннее блокирующего XREADGROUP, иначе чтение обрывается.
-    redis = Redis.from_url(
-        REDIS_URL,
-        decode_responses=True,
-        socket_timeout=_BLOCK_MS / 1000 + 10,
-        socket_connect_timeout=5,
-    )
+async def _handle_notice(event: dict) -> None:
     try:
-        await _ensure_group(redis, stream, start)
-        cursors = {stream: _PENDING}
-        print(f"Читаю события Chat API: {stream}", flush=True)
-        while True:
-            try:
-                batches = await redis.xreadgroup(_GROUP, EVENTS_CONSUMER, cursors, count=50, block=_BLOCK_MS)
-            except asyncio.CancelledError:
-                raise
-            except Exception as exc:  # noqa: BLE001 — Redis может перезапускаться
-                print(f"Не прочитал события: {type(exc).__name__}: {exc}", flush=True)
-                await asyncio.sleep(1)
-                continue
-            for name, entries in batches or []:
-                if not entries and cursors[name] == _PENDING:
-                    cursors[name] = _NEW
-                for entry_id, fields in entries:
-                    await _handle(fields, deliver)
-                    await redis.xack(name, _GROUP, entry_id)
-                    if cursors[name] != _NEW:
-                        cursors[name] = entry_id
-    finally:
-        await redis.aclose()
+        await _deliver_notice(event)
+    except Exception as exc:  # noqa: BLE001
+        print(f"Не обработал уведомление {event!r}: {type(exc).__name__}: {exc}", flush=True)
+
+
+async def _listen(path: str, handler) -> None:
+    """Держит WebSocket: каждое событие доставляется и подтверждается по порядку."""
+    url = f"{CHAT_API_URL.replace('http', 'ws', 1)}{path}?consumer={quote(EVENTS_CONSUMER)}"
+    while True:
+        try:
+            async with connect(
+                url,
+                additional_headers=chat_api_headers(),
+                open_timeout=15,
+                ping_interval=20,
+                ping_timeout=20,
+            ) as socket:
+                print(f"Читаю события Chat API: {url}", flush=True)
+                async for raw in socket:
+                    message = json.loads(raw)
+                    await handler(message["event"])
+                    await socket.send(json.dumps({"ack": message["id"]}))
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001 — обрыв или перезапуск Chat API
+            print(f"WebSocket событий: {type(exc).__name__}: {exc}", flush=True)
+        await asyncio.sleep(_RECONNECT_DELAY_SECONDS)
 
 
 async def consume_events() -> None:
-    await _consume(_STREAM, _deliver)
+    await _listen("/api/v1/events/vk", _handle)
 
 
 async def consume_broadcasts() -> None:
-    # С нуля, чтобы уведомление, записанное до старта бота, не потерялось.
-    await _consume(_BROADCAST_STREAM, _deliver_notice, start="0")
+    await _listen("/api/v1/broadcasts/vk", _handle_notice)
