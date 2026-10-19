@@ -5,18 +5,21 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from vkbottle.bot import Message, MessageEvent
 
 from app.api_client import ChatApiError, NotChattingError, chat_api
 from app.gateway import gateway, send_vk, vk_keyboard
+from app.media import store_vk_media
 from app.peer import Peer
 from app.ui import (
     CHAT_BTN_NEXT,
     CHAT_BTN_STOP,
     COMMUNITY_GREETING,
     FOUND_TEXT,
+    MEDIA_FAILED_TEXT,
     NEW_PARTNER_BTN,
     NO_PARTNERS_TEXT,
     PARTNER_LEFT_TEXT,
@@ -91,22 +94,37 @@ async def handle_next(peer: Peer, text: str, searching: bool) -> bool:
     return True
 
 
-async def handle_chat_line(peer: Peer, text: str, chatting: bool) -> bool:
-    """Пересылает текст живому собеседнику."""
+async def handle_chat_line(
+    peer: Peer,
+    text: str,
+    chatting: bool,
+    uploader: Callable[[], Awaitable[str]] | None = None,
+) -> bool:
+    """Пересылает текст. Медиа сначала сохраняет в S3 и собеседнику не отправляет."""
     if not chatting:
         return False
-    if not text:
-        return True
-    try:
-        delivered = (await chat_api.send_message(peer, text)).delivered
-    except NotChattingError:
-        delivered = False
-    if not delivered:
+    media_state = await uploader() if uploader is not None else "none"
+    if media_state == "left":
         await gateway.send(peer, PARTNER_LEFT_TEXT, "partner_left")
+        return True
+    if text:
+        try:
+            delivered = (await chat_api.send_message(peer, text)).delivered
+        except NotChattingError:
+            delivered = False
+        if not delivered:
+            await gateway.send(peer, PARTNER_LEFT_TEXT, "partner_left")
+            return True
+    if media_state == "failed":
+        await gateway.send(peer, MEDIA_FAILED_TEXT, "line")
     return True
 
 
-async def handle_menu_or_dialog(peer: Peer, text: str) -> None:
+async def handle_menu_or_dialog(
+    peer: Peer,
+    text: str,
+    uploader: Callable[[], Awaitable[str]] | None = None,
+) -> None:
     """Разбирает меню и реплики диалога."""
     phase = await chat_api.phase(peer)
     chatting = phase == "chatting"
@@ -116,13 +134,18 @@ async def handle_menu_or_dialog(peer: Peer, text: str) -> None:
         return
     if await handle_next(peer, text, searching):
         return
-    if await handle_chat_line(peer, text, chatting):
+    if await handle_chat_line(peer, text, chatting, uploader):
         return
 
     await gateway.send(peer, COMMUNITY_GREETING, "main")
 
 
-async def handle_incoming(peer: Peer, text: str, payload: dict) -> None:
+async def handle_incoming(
+    peer: Peer,
+    text: str,
+    payload: dict,
+    uploader: Callable[[], Awaitable[str]] | None = None,
+) -> None:
     """Маршрутизирует сообщение из лички: старт, затем меню или диалог."""
     try:
         await chat_api.visit(peer)
@@ -135,7 +158,7 @@ async def handle_incoming(peer: Peer, text: str, payload: dict) -> None:
         if _is_report(text, payload):
             await handle_report(peer)
             return
-        await handle_menu_or_dialog(peer, text)
+        await handle_menu_or_dialog(peer, text, uploader)
     except ChatApiError as exc:
         print(f"Chat API недоступен для {peer}: {exc}", flush=True)
         await gateway.send(peer, SERVICE_DOWN_TEXT, "main")
@@ -160,7 +183,13 @@ def vk_handler(bot_key: str):
                 if _is_start(text, payload):
                     await connect_with_partner(peer)
                 return
-            await handle_incoming(peer, text, payload)
+            uploader = None
+            if message.attachments:
+
+                async def uploader() -> str:
+                    return await store_vk_media(message, peer)
+
+            await handle_incoming(peer, text, payload, uploader)
         except Exception as exc:  # noqa: BLE001 — иначе ошибка остаётся только в loguru и в docker её нет
             print(
                 f"Ошибка ответа group={bot_key} from={message.from_id}: "

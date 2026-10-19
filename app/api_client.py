@@ -85,6 +85,24 @@ class ChatApiClient:
         body = await self._request("POST", peer, "messages", {"text": text})
         return SendResult(delivered=body["delivered"], phase=body["phase"])
 
+    async def store_media(self, peer: Peer, kind: str, data: bytes) -> str:
+        """Кладёт байты в Chat API. Возвращает ключ объекта в S3."""
+        path = f"/peers/{peer.platform}/{peer.bot_key}/{peer.user_id}/media"
+        try:
+            response = await self._http.post(
+                path,
+                data={"kind": kind},
+                files={"file": ("upload.bin", data, "application/octet-stream")},
+                timeout=180,
+            )
+        except httpx.HTTPError as exc:
+            raise ChatApiError(f"POST {path}: {type(exc).__name__}: {exc}") from exc
+        if response.status_code == httpx.codes.CONFLICT:
+            raise NotChattingError(response.text)
+        if response.is_error:
+            raise ChatApiError(f"POST {path}: HTTP {response.status_code} {response.text}")
+        return str(response.json()["key"])
+
     async def delivery_failed(self, peer: Peer) -> None:
         await self._request("POST", peer, "delivery-failed")
 
