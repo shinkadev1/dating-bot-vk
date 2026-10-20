@@ -1,9 +1,11 @@
-"""Доставка текста в то сообщество ВК, которому пишет человек."""
+"""Доставка текста и медиа в то сообщество ВК, которому пишет человек."""
 
 from __future__ import annotations
 
 import json
 from typing import Any
+
+import httpx
 
 from app.peer import Peer
 from app.ui import (
@@ -118,6 +120,124 @@ class Gateway:
                 flush=True,
             )
             return False
+
+    async def send_media(self, peer: Peer, kind: str, content_type: str, data: bytes) -> bool:
+        """Кладёт файл в диалог ВК. False — человек недоступен, диалог надо закрыть.
+
+        Ошибка загрузки файла диалог не обрывает: собеседник просто не увидит это вложение.
+        Кружок уходит обычным видео: токен сообщества кружок создать не может.
+        """
+        api = self._apis.get(peer.bot_key)
+        if api is None:
+            print(f"Нет сообщества ВК {peer.bot_key}", flush=True)
+            return False
+        try:
+            attachment = await _vk_attachment(api, peer.user_id, kind, content_type, data)
+            await api.messages.send(
+                peer_id=peer.user_id,
+                random_id=new_random_id(),
+                attachment=attachment,
+            )
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не отправил медиа vk:{peer.bot_key}:{peer.user_id}: {type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return not _vk_blocked(exc)
+
+
+def _vk_blocked(exc: BaseException) -> bool:
+    """Человек запретил сообщения сообщества или удалён."""
+    code = getattr(exc, "code", None)
+    if code in {7, 900, 901, 902}:
+        return True
+    text = str(exc)
+    return any(f"[{item}]" in text for item in (7, 900, 901, 902))
+
+
+def _as_data(value: object) -> object:
+    if isinstance(value, dict) and "response" in value:
+        return value["response"]
+    dump = getattr(value, "model_dump", None)
+    if dump is None:
+        return value
+    raw = dump(mode="json")
+    if isinstance(raw, dict) and "response" in raw:
+        return raw["response"]
+    return raw
+
+
+def _as_dict(value: object) -> dict:
+    data = _as_data(value)
+    return data if isinstance(data, dict) else {}
+
+
+def _filename(kind: str, content_type: str) -> str:
+    ext = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+        "video/mp4": "mp4",
+        "video/webm": "webm",
+        "video/quicktime": "mov",
+        "audio/ogg": "ogg",
+        "audio/mpeg": "mp3",
+        "audio/mp4": "m4a",
+    }.get(content_type, "bin")
+    return f"{kind}.{ext}"
+
+
+async def _upload_file(url: str, field: str, filename: str, data: bytes, content_type: str) -> dict:
+    async with httpx.AsyncClient(timeout=180) as client:
+        response = await client.post(url, files={field: (filename, data, content_type)})
+        response.raise_for_status()
+    body = response.json()
+    if not isinstance(body, dict):
+        raise RuntimeError("ВК вернул не объект при загрузке файла")
+    return body
+
+
+async def _vk_attachment(api: Any, peer_id: int, kind: str, content_type: str, data: bytes) -> str:
+    name = _filename(kind, content_type)
+    if kind == "photo":
+        server = _as_dict(await api.request("photos.getMessagesUploadServer", {"peer_id": peer_id}))
+        uploaded = await _upload_file(str(server["upload_url"]), "photo", name, data, content_type)
+        saved = _as_data(
+            await api.request(
+                "photos.saveMessagesPhoto",
+                {"photo": uploaded["photo"], "server": uploaded["server"], "hash": uploaded["hash"]},
+            )
+        )
+        photo = _as_dict(saved[0] if isinstance(saved, list) and saved else saved)
+        attachment = f"photo{photo['owner_id']}_{photo['id']}"
+        access_key = photo.get("access_key")
+        return f"{attachment}_{access_key}" if access_key else attachment
+    if kind == "voice":
+        server = _as_dict(
+            await api.request(
+                "docs.getMessagesUploadServer",
+                {"peer_id": peer_id, "type": "audio_message"},
+            )
+        )
+        uploaded = await _upload_file(str(server["upload_url"]), "file", name, data, content_type)
+        saved = _as_dict(await api.request("docs.save", {"file": uploaded["file"]}))
+        audio = saved.get("audio_message") if isinstance(saved.get("audio_message"), dict) else None
+        if audio and audio.get("id") is not None:
+            return f"audio_message{audio['owner_id']}_{audio['id']}"
+        doc = saved.get("doc") if isinstance(saved.get("doc"), dict) else saved
+        return f"doc{doc['owner_id']}_{doc['id']}"
+    server = _as_dict(
+        await api.request(
+            "video.save",
+            {"name": name, "is_private": 1, "wallpost": 0, "repeat": 0},
+        )
+    )
+    await _upload_file(str(server["upload_url"]), "video_file", name, data, content_type)
+    attachment = f"video{server['owner_id']}_{server['video_id']}"
+    access_key = server.get("access_key")
+    return f"{attachment}_{access_key}" if access_key else attachment
 
 
 gateway = Gateway()

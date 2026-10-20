@@ -19,6 +19,10 @@ class NotChattingError(ChatApiError):
     """У пользователя уже нет активного диалога."""
 
 
+class NotPremiumError(ChatApiError):
+    """Медиа может отправить только пользователь с премиумом."""
+
+
 @dataclass(frozen=True)
 class SendResult:
     delivered: bool
@@ -99,9 +103,24 @@ class ChatApiClient:
             raise ChatApiError(f"POST {path}: {type(exc).__name__}: {exc}") from exc
         if response.status_code == httpx.codes.CONFLICT:
             raise NotChattingError(response.text)
+        if response.status_code == httpx.codes.FORBIDDEN and "премиум" in response.text.casefold():
+            raise NotPremiumError(response.text)
         if response.is_error:
             raise ChatApiError(f"POST {path}: HTTP {response.status_code} {response.text}")
         return str(response.json()["key"])
+
+    async def fetch_media(self, media_id: str) -> tuple[bytes, str, str]:
+        """Байты, MIME и вид файла, который Chat API поставил в очередь этому боту."""
+        path = f"/media/{media_id}"
+        try:
+            response = await self._http.get(path, timeout=180)
+        except httpx.HTTPError as exc:
+            raise ChatApiError(f"GET {path}: {type(exc).__name__}: {exc}") from exc
+        if response.is_error:
+            raise ChatApiError(f"GET {path}: HTTP {response.status_code} {response.text}")
+        content_type = response.headers.get("content-type", "application/octet-stream").split(";", 1)[0].strip()
+        kind = response.headers.get("x-media-kind") or "photo"
+        return response.content, content_type, kind
 
     async def delivery_failed(self, peer: Peer) -> None:
         await self._request("POST", peer, "delivery-failed")

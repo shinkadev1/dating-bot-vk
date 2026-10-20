@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 from vkbottle.bot import Message
 
-from app.api_client import NotChattingError, chat_api
+from app.api_client import NotChattingError, NotPremiumError, chat_api
 from app.peer import Peer
 
 _LIMITS = {
@@ -360,6 +360,9 @@ async def store_vk_media(message: Message, peer: Peer) -> str:
             key = await chat_api.store_media(peer, kind, data)
         except NotChattingError:
             return "left"
+        except NotPremiumError:
+            print(f"Медиа только у премиума {peer}", flush=True)
+            return "none"
         except Exception as exc:  # noqa: BLE001 — одно вложение не должно ронять остальные
             failed = True
             print(f"Не сохранил {kind} {peer}: {type(exc).__name__}: {exc}", flush=True)

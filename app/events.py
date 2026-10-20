@@ -34,6 +34,17 @@ async def _deliver(body: dict) -> None:
         delivered = await gateway.send(peer, FOUND_TEXT, "chat")
     elif kind == "message":
         delivered = await gateway.send(peer, format_partner(str(body.get("text") or "")), "line")
+    elif kind == "media":
+        media_id = str(body.get("media_id") or "")
+        if not media_id:
+            print(f"Событие media без файла для {peer}", flush=True)
+            return
+        try:
+            data, content_type, file_kind = await chat_api.fetch_media(media_id)
+        except ChatApiError as exc:
+            print(f"Не скачал медиа {media_id} для {peer}: {exc}", flush=True)
+            return
+        delivered = await gateway.send_media(peer, file_kind, content_type, data)
     elif kind == "partner_left":
         cancel_search_timeout(peer)
         if body.get("reason") == "undeliverable":
