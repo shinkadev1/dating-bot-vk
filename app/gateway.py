@@ -146,6 +146,31 @@ class Gateway:
             )
             return not _vk_blocked(exc)
 
+    async def send_notice(self, peer: Peer, text: str, *, photo: bytes | None, content_type: str | None) -> None:
+        """Текст рассылки и, если есть, фото одним сообщением. Недоступный человек пропускается."""
+        if photo:
+            api = self._apis.get(peer.bot_key)
+            if api is None:
+                print(f"Нет сообщества ВК {peer.bot_key}", flush=True)
+            else:
+                try:
+                    attachment = await _vk_attachment(api, peer.user_id, "photo", content_type or "image/jpeg", photo)
+                    await api.messages.send(
+                        peer_id=peer.user_id,
+                        random_id=new_random_id(),
+                        attachment=attachment,
+                        message=text,
+                    )
+                    return
+                except Exception as exc:  # noqa: BLE001
+                    print(
+                        f"Не отправил фото уведомления vk:{peer.bot_key}:{peer.user_id}: {type(exc).__name__}: {exc}",
+                        flush=True,
+                    )
+                    if _vk_blocked(exc):
+                        return
+        await self.send(peer, text, "line")
+
 
 def _vk_blocked(exc: BaseException) -> bool:
     """Человек запретил сообщения сообщества или удалён."""
