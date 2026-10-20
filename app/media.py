@@ -255,13 +255,8 @@ async def _raw_attachments(api: Any, peer_id: int, conversation_message_id: int)
 
 
 def _needs_raw(payloads: list[dict]) -> bool:
-    for item in payloads:
-        if item.get("type") in (None, "NOT_SUPPORTED"):
-            return True
-        found = _classify(item)
-        if found is not None and found[0] in ("video", "video_note") and _direct_mp4(found[1]) is None:
-            return True
-    return False
+    """Сырое сообщение нужно, только если библиотека не разобрала вложение. Видео и кружки не скачиваются."""
+    return any(item.get("type") in (None, "NOT_SUPPORTED") for item in payloads)
 
 
 async def _player_mp4(video: dict) -> str | None:
@@ -329,7 +324,7 @@ async def _bytes_for(
 
 
 async def store_vk_media(message: Message, peer: Peer) -> str:
-    """Сохраняет вложения диалога. ok — все легли в S3, failed — хотя бы одно нет, left — диалог уже закрыт."""
+    """Сохраняет фото и голосовые. Видео и кружки ВК не скачиваются и пользователю об этом не пишется."""
     payloads = _payloads(message)
     peer_id = message.peer_id
     conversation_message_id = message.conversation_message_id
@@ -338,8 +333,12 @@ async def store_vk_media(message: Message, peer: Peer) -> str:
         if raw:
             payloads = raw
     found = [item for item in (_classify(payload) for payload in payloads) if item is not None]
+    skipped = [kind for kind, _payload in found if kind in ("video", "video_note")]
+    found = [item for item in found if item[0] not in ("video", "video_note")]
+    if skipped:
+        print(f"VK видео и кружки не скачиваются {peer}: {skipped}", flush=True)
     if not found:
-        if payloads:
+        if payloads and not skipped:
             print(f"VK вложения без медиа {peer}: {[item.get('type') for item in payloads]}", flush=True)
         return "none"
     print(f"VK медиа {peer}: {[kind for kind, _payload in found]}", flush=True)
