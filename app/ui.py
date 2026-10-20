@@ -29,6 +29,10 @@ PARTNER_LEFT_TEXT = (
 REPORT_SENT_TEXT = "Жалоба отправлена. Спасибо, что сообщили."
 UNDELIVERED_TEXT = "❌ Собеседник недоступен, диалог закончен.\nНажми «Начать», чтобы найти нового собеседника."
 SERVICE_DOWN_TEXT = "Сервис временно недоступен. Попробуй через минуту."
+MEDIA_PREMIUM_TEXT = (
+    "Чтобы отправлять медиа, получите премиум:\n"
+    "https://vk.ru/club242172702"
+)
 
 
 def format_partner(text: str) -> str:

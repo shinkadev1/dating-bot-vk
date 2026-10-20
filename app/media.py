@@ -362,7 +362,7 @@ async def store_vk_media(message: Message, peer: Peer) -> str:
             return "left"
         except NotPremiumError:
             print(f"Медиа только у премиума {peer}", flush=True)
-            return "none"
+            return "premium"
         except Exception as exc:  # noqa: BLE001 — одно вложение не должно ронять остальные
             failed = True
             print(f"Не сохранил {kind} {peer}: {type(exc).__name__}: {exc}", flush=True)
