@@ -189,26 +189,79 @@ def _filename(kind: str, content_type: str) -> str:
     return f"{kind}.{ext}"
 
 
+_VK_VERSION = "5.199"
+_UPLOAD_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    ),
+    "Referer": "https://vk.com/",
+}
+
+
+class VkCallError(RuntimeError):
+    def __init__(self, method: str, code: int | None, message: str) -> None:
+        super().__init__(f"{method} [{code}] {message}")
+        self.code = code
+
+
+def _form_value(value: object) -> str:
+    """ВК ждёт photo и file строкой. Список из ответа загрузки иначе теряется."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
+async def _vk_method(api: Any, method: str, params: dict) -> object:
+    token = getattr(api, "token", None)
+    if not token:
+        return _as_data(await api.request(method, params))
+    form = {key: _form_value(value) for key, value in params.items()}
+    form["access_token"] = token
+    form["v"] = _VK_VERSION
+    async with httpx.AsyncClient(timeout=60) as client:
+        response = await client.post(f"https://api.vk.com/method/{method}", data=form)
+        response.raise_for_status()
+    body = response.json()
+    error = body.get("error") if isinstance(body, dict) else None
+    if isinstance(error, dict):
+        code = error.get("error_code")
+        raise VkCallError(method, code if isinstance(code, int) else None, str(error.get("error_msg") or ""))
+    if isinstance(body, dict) and "response" in body:
+        return body["response"]
+    return body
+
+
 async def _upload_file(url: str, field: str, filename: str, data: bytes, content_type: str) -> dict:
     async with httpx.AsyncClient(timeout=180) as client:
-        response = await client.post(url, files={field: (filename, data, content_type)})
+        response = await client.post(
+            url,
+            files={field: (filename, data, content_type)},
+            headers=_UPLOAD_HEADERS,
+        )
         response.raise_for_status()
     body = response.json()
     if not isinstance(body, dict):
         raise RuntimeError("ВК вернул не объект при загрузке файла")
+    if body.get("error"):
+        raise RuntimeError(f"ВК не принял файл: {body['error']}")
     return body
 
 
 async def _vk_attachment(api: Any, peer_id: int, kind: str, content_type: str, data: bytes) -> str:
     name = _filename(kind, content_type)
     if kind == "photo":
-        server = _as_dict(await api.request("photos.getMessagesUploadServer", {"peer_id": peer_id}))
+        server = _as_dict(await _vk_method(api, "photos.getMessagesUploadServer", {"peer_id": peer_id}))
         uploaded = await _upload_file(str(server["upload_url"]), "photo", name, data, content_type)
-        saved = _as_data(
-            await api.request(
-                "photos.saveMessagesPhoto",
-                {"photo": uploaded["photo"], "server": uploaded["server"], "hash": uploaded["hash"]},
-            )
+        photo_value = _form_value(uploaded.get("photo"))
+        if photo_value in {"", "[]", "undefined"}:
+            raise RuntimeError("ВК не принял фото при загрузке")
+        saved = await _vk_method(
+            api,
+            "photos.saveMessagesPhoto",
+            {"photo": photo_value, "server": uploaded["server"], "hash": uploaded["hash"]},
         )
         photo = _as_dict(saved[0] if isinstance(saved, list) and saved else saved)
         attachment = f"photo{photo['owner_id']}_{photo['id']}"
@@ -216,20 +269,22 @@ async def _vk_attachment(api: Any, peer_id: int, kind: str, content_type: str, d
         return f"{attachment}_{access_key}" if access_key else attachment
     if kind == "voice":
         server = _as_dict(
-            await api.request(
+            await _vk_method(
+                api,
                 "docs.getMessagesUploadServer",
                 {"peer_id": peer_id, "type": "audio_message"},
             )
         )
         uploaded = await _upload_file(str(server["upload_url"]), "file", name, data, content_type)
-        saved = _as_dict(await api.request("docs.save", {"file": uploaded["file"]}))
+        saved = _as_dict(await _vk_method(api, "docs.save", {"file": uploaded["file"]}))
         audio = saved.get("audio_message") if isinstance(saved.get("audio_message"), dict) else None
         if audio and audio.get("id") is not None:
             return f"audio_message{audio['owner_id']}_{audio['id']}"
         doc = saved.get("doc") if isinstance(saved.get("doc"), dict) else saved
         return f"doc{doc['owner_id']}_{doc['id']}"
     server = _as_dict(
-        await api.request(
+        await _vk_method(
+            api,
             "video.save",
             {"name": name, "is_private": 1, "wallpost": 0, "repeat": 0},
         )
