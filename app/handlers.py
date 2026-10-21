@@ -100,7 +100,7 @@ async def handle_chat_line(
     chatting: bool,
     uploader: Callable[[], Awaitable[str]] | None = None,
 ) -> bool:
-    """Пересылает текст. Медиа уходит собеседнику, если у отправителя есть премиум."""
+    """Пересылает текст и медиа собеседнику."""
     if not chatting:
         return False
     media_state = await uploader() if uploader is not None else "none"
