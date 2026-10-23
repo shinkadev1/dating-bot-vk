@@ -43,7 +43,7 @@ MEDIA_PREMIUM_TEXT = (
     "Чтобы отправлять медиа, получите премиум:\n"
     "https://vk.ru/club242172702"
 )
-PREMIUM_URL = "https://pay.chatwithyou.site"
+PREMIUM_URL = "https://vk.cc/d2HjY8"
 PREMIUM_STATUS_TEXT = (
     "⚡ Временная акция, скидка 99%:\n\n"
     "🍓 Настройка поиска: например, только девушки младше 25 лет\n"
