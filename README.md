@@ -14,6 +14,17 @@ cp .env.example .env
 docker compose up --build
 ```
 
+Клавиатуру и ответы бота можно крутить без Chat API. `DEV_MODE=True` подменяет вызовы
+заглушкой в памяти и не читает события. `DEV_MODE=False` — обычный Chat API. Деплой флаг не копирует.
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+Тот же режим без Compose: `DEV_MODE=True` в `.env` и `python -m app.main`.
+Long Poll ВК один на токен сообщества. Пока прод-контейнер слушает основное сообщество,
+в локальный запуск нужен другой токен, иначе события уйдут локальному процессу.
+
 ## Прод
 
 Push в `master` собирает образ `dating-bot` и перезапускает контейнер на сервере бота.

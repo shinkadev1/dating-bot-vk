@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from app.mock_api import MockChatApi
 
 import httpx
 
-from app.config import CHAT_API_SERVICE_TOKEN, CHAT_API_URL, chat_api_headers
+from app.config import CHAT_API_SERVICE_TOKEN, CHAT_API_URL, DEV_MODE, chat_api_headers
 from app.peer import Peer
 
 
@@ -126,4 +129,13 @@ class ChatApiClient:
         await self._request("POST", peer, "delivery-failed")
 
 
-chat_api = ChatApiClient(CHAT_API_URL, CHAT_API_SERVICE_TOKEN)
+def build_chat_api() -> ChatApiClient | MockChatApi:
+    """Настоящий клиент или локальная заглушка, если включён DEV_MODE."""
+    if DEV_MODE:
+        from app.mock_api import MockChatApi
+
+        return MockChatApi()
+    return ChatApiClient(CHAT_API_URL, CHAT_API_SERVICE_TOKEN)
+
+
+chat_api = build_chat_api()

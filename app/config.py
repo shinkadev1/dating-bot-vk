@@ -25,6 +25,8 @@ CF_ACCESS_CLIENT_ID = (os.getenv("CF_ACCESS_CLIENT_ID") or "").strip()
 CF_ACCESS_CLIENT_SECRET = (os.getenv("CF_ACCESS_CLIENT_SECRET") or "").strip()
 # Имя потребителя в группе Redis. Постоянное, чтобы после перезапуска дочитать неподтверждённые события.
 EVENTS_CONSUMER = (os.getenv("EVENTS_CONSUMER") or "bot").strip()
+# Локальная заглушка Chat API. В env только True или False.
+DEV_MODE = (os.getenv("DEV_MODE") or "False").strip().lower() == "true"
 
 
 def chat_api_headers(token: str | None = None) -> dict[str, str]:

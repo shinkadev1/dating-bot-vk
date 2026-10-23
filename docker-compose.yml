@@ -16,3 +16,4 @@ services:
       CHAT_API_URL: ${CHAT_API_URL:-https://api.chatwithyou.site}
       CF_ACCESS_CLIENT_ID: ${CF_ACCESS_CLIENT_ID:-}
       CF_ACCESS_CLIENT_SECRET: ${CF_ACCESS_CLIENT_SECRET:-}
+      DEV_MODE: ${DEV_MODE:-False}

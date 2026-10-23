@@ -3,97 +3,123 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 import httpx
 
 from app.peer import Peer
 from app.ui import (
+    COMMUNITY_GREETING,
+    PREMIUM_STATUS_TEXT,
+    ROOMS_TEXT,
+    SETTINGS_TEXT,
+    build_bottom_keyboard,
     build_chat_keyboard,
+    build_dating_keyboard,
     build_main_keyboard,
     build_partner_left_keyboard,
-    empty_keyboard,
+    build_premium_keyboard,
+    build_rooms_keyboard,
+    build_settings_keyboard,
     new_random_id,
 )
 
+_ASSETS = Path(__file__).resolve().parent / "assets"
+_GREETING_PHOTO = _ASSETS / "greeting.jpg"
+_PREMIUM_PHOTO = _ASSETS / "premium.png"
+_greeting_photo_bytes: bytes | None = None
+_premium_photo_bytes: bytes | None = None
+
 
 def vk_keyboard(kind: str) -> str | None:
-    """Клавиатура под текстом. None — реплика собеседника, без кнопок диалога."""
+    """Клавиатура под текстом. None — сообщение вообще без клавиатуры."""
     if kind == "line":
-        return None
+        return build_bottom_keyboard()
     if kind == "chat":
         return build_chat_keyboard()
     if kind == "partner_left":
         return build_partner_left_keyboard()
+    if kind == "dating":
+        return build_dating_keyboard()
+    if kind == "premium":
+        return build_premium_keyboard()
     return build_main_keyboard()
 
 
-def _is_inline(keyboard: str) -> bool:
-    try:
-        data = json.loads(keyboard)
-    except json.JSONDecodeError:
-        return False
-    return isinstance(data, dict) and bool(data.get("inline"))
+def _greeting_photo() -> bytes:
+    """Баннер приветствия. Файл читается один раз."""
+    global _greeting_photo_bytes
+    if _greeting_photo_bytes is None:
+        _greeting_photo_bytes = _GREETING_PHOTO.read_bytes()
+    return _greeting_photo_bytes
 
 
-def _message_id(response: object) -> int | None:
-    if isinstance(response, int):
-        return response
-    if isinstance(response, dict):
-        value = response.get("response", response.get("message_id"))
-        if isinstance(value, int):
-            return value
-        if isinstance(value, str) and value.isdigit():
-            return int(value)
-    return None
+def _premium_photo() -> bytes:
+    """Картинка акции для премиума. Файл читается один раз."""
+    global _premium_photo_bytes
+    if _premium_photo_bytes is None:
+        _premium_photo_bytes = _PREMIUM_PHOTO.read_bytes()
+    return _premium_photo_bytes
 
 
-async def _send_plain(api: Any, peer_id: int, text: str, keyboard: str | None = None) -> object:
+async def _send_plain(
+    api: Any,
+    peer_id: int,
+    text: str,
+    keyboard: str | None = None,
+    attachment: str | None = None,
+) -> object:
     payload: dict[str, Any] = {"peer_id": peer_id, "message": text, "random_id": new_random_id()}
     if keyboard is not None:
         payload["keyboard"] = keyboard
+    if attachment:
+        payload["attachment"] = attachment
     return await api.messages.send(**payload)
 
 
-async def send_vk(api: Any, peer_id: int, text: str, keyboard: str | None) -> None:
-    """Пишет в диалог ВК. Inline-кнопки крепятся к тексту и снимают старую нижнюю клавиатуру."""
-    if keyboard is None or not _is_inline(keyboard):
-        try:
-            await _send_plain(api, peer_id, text, keyboard)
-        except Exception as exc:
-            print(
-                f"Клавиатура не принята для peer={peer_id}, шлю текст: {type(exc).__name__}: {exc}",
-                flush=True,
-            )
-            await _send_plain(api, peer_id, text)
-        return
+async def send_vk(
+    api: Any,
+    peer_id: int,
+    text: str,
+    keyboard: str | None,
+    attachment: str | None = None,
+) -> None:
+    """Пишет в диалог ВК. Inline-кнопки крепятся к тексту и не трогают нижнюю клавиатуру сообщества."""
     try:
-        sent = await _send_plain(api, peer_id, text, empty_keyboard())
+        await _send_plain(api, peer_id, text, keyboard, attachment)
     except Exception as exc:
         print(
-            f"Не снял нижнюю клавиатуру peer={peer_id}: {type(exc).__name__}: {exc}",
+            f"Клавиатура не принята для peer={peer_id}, шлю текст: {type(exc).__name__}: {exc}",
             flush=True,
         )
-        await _send_plain(api, peer_id, text, keyboard)
-        return
-    message_id = _message_id(sent)
-    if message_id is None:
-        await _send_plain(api, peer_id, text, keyboard)
-        return
+        await _send_plain(api, peer_id, text, attachment=attachment)
+
+
+async def send_vk_greeting(api: Any, peer_id: int) -> None:
+    """Приветствие с баннером и inline-кнопкой «Начать» одним сообщением."""
+    attachment = None
     try:
-        await api.messages.edit(
-            peer_id=peer_id,
-            message=text,
-            message_id=message_id,
-            keyboard=keyboard,
-        )
-    except Exception as exc:
+        attachment = await _vk_attachment(api, peer_id, "photo", "image/jpeg", _greeting_photo())
+    except Exception as exc:  # noqa: BLE001 — приветствие важнее баннера
         print(
-            f"Не прикрепил кнопки peer={peer_id}, шлю отдельным сообщением: "
-            f"{type(exc).__name__}: {exc}",
+            f"Не загрузил баннер приветствия peer={peer_id}: {type(exc).__name__}: {exc}",
             flush=True,
         )
-        await _send_plain(api, peer_id, text, keyboard)
+    await send_vk(api, peer_id, COMMUNITY_GREETING, build_main_keyboard(), attachment)
+
+
+async def send_vk_premium(api: Any, peer_id: int) -> None:
+    """Промо премиума одним сообщением: картинка акции, текст и кнопка оплаты."""
+    attachment = None
+    try:
+        attachment = await _vk_attachment(api, peer_id, "photo", "image/png", _premium_photo())
+    except Exception as exc:  # noqa: BLE001 — текст важнее картинки
+        print(
+            f"Не загрузил картинку премиума peer={peer_id}: {type(exc).__name__}: {exc}",
+            flush=True,
+        )
+    await send_vk(api, peer_id, PREMIUM_STATUS_TEXT, build_premium_keyboard(), attachment)
 
 
 class Gateway:
@@ -117,6 +143,70 @@ class Gateway:
         except Exception as exc:  # noqa: BLE001 — сбой доставки не должен ронять общий обработчик
             print(
                 f"Не удалось написать vk:{peer.bot_key}:{peer.user_id}: {type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return False
+
+    async def send_greeting(self, peer: Peer) -> bool:
+        """Приветствие с баннером в личку сообщества."""
+        try:
+            api = self._apis.get(peer.bot_key)
+            if api is None:
+                raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
+            await send_vk_greeting(api, peer.user_id)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не удалось отправить приветствие vk:{peer.bot_key}:{peer.user_id}: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return False
+
+    async def send_rooms(self, peer: Peer, selected: str) -> bool:
+        """Текст выбора комнаты и inline-клавиатура с отмеченной комнатой."""
+        try:
+            api = self._apis.get(peer.bot_key)
+            if api is None:
+                raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
+            await send_vk(api, peer.user_id, ROOMS_TEXT, build_rooms_keyboard(selected))
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не удалось отправить комнаты vk:{peer.bot_key}:{peer.user_id}: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return False
+
+    async def send_settings(self, peer: Peer, selected: str) -> bool:
+        """Текст настроек поиска и inline-клавиатура выбора пола."""
+        try:
+            api = self._apis.get(peer.bot_key)
+            if api is None:
+                raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
+            await send_vk(api, peer.user_id, SETTINGS_TEXT, build_settings_keyboard(selected))
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не удалось отправить настройки vk:{peer.bot_key}:{peer.user_id}: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return False
+
+    async def send_premium(self, peer: Peer) -> bool:
+        """Промо премиума с картинкой акции в личку сообщества."""
+        try:
+            api = self._apis.get(peer.bot_key)
+            if api is None:
+                raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
+            await send_vk_premium(api, peer.user_id)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не удалось отправить премиум vk:{peer.bot_key}:{peer.user_id}: "
+                f"{type(exc).__name__}: {exc}",
                 flush=True,
             )
             return False

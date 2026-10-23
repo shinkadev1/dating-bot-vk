@@ -12,7 +12,7 @@ from vkbottle.bot import Bot, MessageEvent
 from vkbottle.http.aiohttp import AiohttpClient
 
 from app.api_client import ChatApiError, chat_api
-from app.config import CHAT_API_SERVICE_TOKEN, CHAT_API_URL, vk_tokens
+from app.config import CHAT_API_SERVICE_TOKEN, CHAT_API_URL, DEV_MODE, vk_tokens
 from app.events import consume_broadcasts, consume_events
 from app.gateway import gateway
 from app.handlers import answer_waiting, attach_start_buttons, vk_handler, vk_start_handler
@@ -63,7 +63,7 @@ async def _run() -> None:
     tokens = vk_tokens()
     if not tokens:
         raise SystemExit("Не задан токен сообщества. Укажите VK_TOKEN или VK_TOKENS.")
-    if not CHAT_API_SERVICE_TOKEN:
+    if not DEV_MODE and not CHAT_API_SERVICE_TOKEN:
         raise SystemExit("Не задан CHAT_API_SERVICE_TOKEN: без него Chat API не примет запросы бота.")
 
     rebuild_vkbottle_response_models()
@@ -91,19 +91,24 @@ async def _run() -> None:
     if not tasks:
         raise SystemExit("Ни одно сообщество не прошло проверку Long Poll.")
 
-    events = asyncio.create_task(consume_events(), name="chat-events")
-    events.add_done_callback(_log_task_end)
-    broadcasts = asyncio.create_task(consume_broadcasts(), name="chat-broadcasts")
-    broadcasts.add_done_callback(_log_task_end)
-
-    print(f"Логика чата: Chat API {CHAT_API_URL}.")
+    listeners: list[asyncio.Task] = []
+    if DEV_MODE:
+        print("Dev-режим: Chat API замокан, события не читаю.", flush=True)
+    else:
+        events = asyncio.create_task(consume_events(), name="chat-events")
+        events.add_done_callback(_log_task_end)
+        broadcasts = asyncio.create_task(consume_broadcasts(), name="chat-broadcasts")
+        broadcasts.add_done_callback(_log_task_end)
+        listeners.extend((events, broadcasts))
+        print(f"Логика чата: Chat API {CHAT_API_URL}.")
     print("Бот запущен. Ожидаю сообщения...")
     try:
         results = await asyncio.gather(*tasks, return_exceptions=True)
     finally:
-        events.cancel()
-        broadcasts.cancel()
-        await asyncio.gather(events, broadcasts, return_exceptions=True)
+        for listener in listeners:
+            listener.cancel()
+        if listeners:
+            await asyncio.gather(*listeners, return_exceptions=True)
         await chat_api.aclose()
     errors = [result for result in results if isinstance(result, BaseException)]
     if errors and len(errors) == len(results):

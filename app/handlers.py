@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -11,29 +12,66 @@ from typing import Any
 from vkbottle.bot import Message, MessageEvent
 
 from app.api_client import ChatApiError, NotChattingError, chat_api
-from app.gateway import gateway, send_vk, vk_keyboard
+from app.gateway import gateway, send_vk_greeting
 from app.media import store_vk_media
 from app.peer import Peer
 from app.ui import (
+    AGE_TEXT,
     CHAT_BTN_NEXT,
     CHAT_BTN_STOP,
-    COMMUNITY_GREETING,
+    DATING_TEXT,
+    DEFAULT_ROOM,
+    FIND_BTN,
     FOUND_TEXT,
+    GENDERS,
     MEDIA_PREMIUM_TEXT,
+    MENU_TEXT,
     NEW_PARTNER_BTN,
     NO_PARTNERS_TEXT,
     PARTNER_LEFT_TEXT,
     REPORT_BTN,
     REPORT_SENT_TEXT,
+    ROOMS,
+    ROOMS_TEXT,
     SEARCHING_TEXT,
     SERVICE_DOWN_TEXT,
+    SETTINGS_TEXT,
     STOP_BTN,
     STOPPED_TEXT,
     build_main_keyboard,
+    build_rooms_keyboard,
+    build_settings_keyboard,
 )
 
 SEARCH_TIMEOUT_SECONDS = 30
 _search_timeouts: dict[Peer, asyncio.Task[None]] = {}
+_room_choice: dict[Peer, str] = {}
+_gender_choice: dict[Peer, str] = {}
+_age_choice: dict[Peer, str] = {}
+_awaiting_age: set[Peer] = set()
+_AGE_RE = re.compile(
+    r"^\s*(\d{1,2})\s*(?:\+|-\s*(\d{1,2}))?\s*(?:лет|года|год|л\.?)?\s*$",
+    re.IGNORECASE,
+)
+
+
+def peer_room(peer: Peer) -> str:
+    """Комната, которую человек выбрал. По умолчанию — встречи в Петербурге."""
+    return _room_choice.get(peer, DEFAULT_ROOM)
+
+
+def parse_age(text: str) -> str | None:
+    """Возраст из «26», «26+» или «24-34». None — не похоже на возраст."""
+    match = _AGE_RE.match(text)
+    if not match:
+        return None
+    low = int(match.group(1))
+    high = int(match.group(2)) if match.group(2) else None
+    if not 14 <= low <= 99:
+        return None
+    if high is not None and not low <= high <= 99:
+        return None
+    return f"{low}+" if high is None else f"{low}-{high}"
 
 
 def parse_payload(raw: Any) -> dict:
@@ -52,7 +90,7 @@ def parse_payload(raw: Any) -> dict:
 def _is_start(text: str, payload: dict) -> bool:
     """Сообщение «Начать», «Новый собеседник», /start или команда start из payload."""
     lowered = text.strip().lower()
-    if lowered in {"начать", "/start", "start", NEW_PARTNER_BTN.lower()}:
+    if lowered in {"начать", "/start", "start", NEW_PARTNER_BTN.lower(), FIND_BTN.lower()}:
         return True
     command = lowered.split()[0].split("@", 1)[0] if lowered else ""
     if command in {"начать", "/start", "start"}:
@@ -137,7 +175,7 @@ async def handle_menu_or_dialog(
     if await handle_chat_line(peer, text, chatting, uploader):
         return
 
-    await gateway.send(peer, COMMUNITY_GREETING, "main")
+    await gateway.send_greeting(peer)
 
 
 async def handle_incoming(
@@ -152,8 +190,39 @@ async def handle_incoming(
     except ChatApiError as exc:
         print(f"Не записал визит {peer.user_id}: {exc}", flush=True)
     try:
+        command = payload.get("command")
+        if peer in _awaiting_age:
+            age = parse_age(text)
+            if age is not None:
+                _awaiting_age.discard(peer)
+                _age_choice[peer] = age
+                await gateway.send(peer, DATING_TEXT, "dating")
+                await gateway.send_premium(peer)
+                return
+            if not command and not _is_start(text, payload):
+                await gateway.send(peer, AGE_TEXT, "dating")
+                return
+            _awaiting_age.discard(peer)
         if _is_start(text, payload):
             await connect_with_partner(peer)
+            return
+        if command == "dating":
+            await handle_dating(peer)
+            return
+        if command == "dating_find":
+            await connect_with_partner(peer)
+            return
+        if command == "dating_rooms":
+            await handle_dating_rooms(peer)
+            return
+        if command == "dating_settings":
+            await handle_dating_settings(peer)
+            return
+        if command == "main":
+            await handle_main_menu(peer)
+            return
+        if command == "premium":
+            await handle_premium(peer)
             return
         if _is_report(text, payload):
             await handle_report(peer)
@@ -179,7 +248,7 @@ def vk_handler(bot_key: str):
             payload = parse_payload(message.payload)
             peer = Peer(bot_key, message.from_id)
             if message.peer_id != message.from_id:
-                await send_vk(message.ctx_api, message.peer_id, COMMUNITY_GREETING, vk_keyboard("greeting"))
+                await send_vk_greeting(message.ctx_api, message.peer_id)
                 if _is_start(text, payload):
                     await connect_with_partner(peer)
                 return
@@ -200,29 +269,83 @@ def vk_handler(bot_key: str):
     return _handle
 
 
+async def choose_room(event: MessageEvent, bot_key: str) -> None:
+    """Нажатие комнаты: запоминает выбор и переносит галочку в том же сообщении."""
+    room = parse_payload(event.payload).get("room")
+    if event.user_id is None or event.user_id <= 0 or room not in ROOMS:
+        return
+    peer = Peer(bot_key, event.user_id)
+    _room_choice[peer] = room
+    try:
+        await event.edit_message(message=ROOMS_TEXT, keyboard=build_rooms_keyboard(room))
+    except Exception as exc:  # noqa: BLE001 — клавиатуру можно и не обновить
+        print(
+            f"Не обновил комнату vk:{bot_key}:{event.user_id}: {type(exc).__name__}: {exc}",
+            flush=True,
+        )
+    try:
+        await event.show_snackbar(f"Комната: {ROOMS[room]}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"Не показал уведомление: {type(exc).__name__}: {exc}", flush=True)
+
+
+async def choose_gender(event: MessageEvent, bot_key: str) -> None:
+    """Нажатие пола: запоминает выбор, обновляет клавиатуру и спрашивает возраст."""
+    gender = parse_payload(event.payload).get("value")
+    if event.user_id is None or event.user_id <= 0 or gender not in GENDERS:
+        return
+    peer = Peer(bot_key, event.user_id)
+    _gender_choice[peer] = gender
+    try:
+        await event.edit_message(message=SETTINGS_TEXT, keyboard=build_settings_keyboard(gender))
+    except Exception as exc:  # noqa: BLE001 — клавиатуру можно и не обновить
+        print(
+            f"Не обновил пол vk:{bot_key}:{event.user_id}: {type(exc).__name__}: {exc}",
+            flush=True,
+        )
+    try:
+        await event.send_empty_answer()
+    except Exception as exc:  # noqa: BLE001
+        print(f"Не подтвердил нажатие: {type(exc).__name__}: {exc}", flush=True)
+    _awaiting_age.add(peer)
+    await gateway.send(peer, AGE_TEXT, "dating")
+
+
 def vk_start_handler(bot_key: str):
-    """Нажатие inline-кнопки: поиск, остановка или жалоба."""
+    """Нажатие inline-кнопки: поиск, остановка, жалоба, комната или переход по меню."""
 
     async def _handle(event: MessageEvent) -> None:
         print(
             f"VK кнопка group={bot_key} from={event.user_id} peer={event.peer_id}",
             flush=True,
         )
+        command = parse_payload(event.payload).get("command")
+        if command == "room":
+            await choose_room(event, bot_key)
+            return
+        if command == "gender":
+            await choose_gender(event, bot_key)
+            return
         try:
             await event.send_empty_answer()
         except Exception as exc:  # noqa: BLE001 — ответ на нажатие не должен срывать поиск
             print(f"Не подтвердил нажатие: {type(exc).__name__}: {exc}", flush=True)
-        command = parse_payload(event.payload).get("command")
-        if command not in {"start", "stop", "report"}:
+        if command not in {"start", "stop", "report", "dating", "dating_find", "premium", "main"}:
             return
         if event.user_id is None or event.user_id <= 0:
             return
         peer = Peer(bot_key, event.user_id)
         try:
-            if command == "start":
+            if command in {"start", "dating_find"}:
                 await connect_with_partner(peer)
             elif command == "stop":
                 await stop_active(peer)
+            elif command == "dating":
+                await handle_dating(peer)
+            elif command == "premium":
+                await handle_premium(peer)
+            elif command == "main":
+                await handle_main_menu(peer)
             else:
                 await handle_report(peer)
         except ChatApiError as exc:
@@ -236,6 +359,32 @@ def vk_start_handler(bot_key: str):
             )
 
     return _handle
+
+
+def _keyboard_buttons(raw: object) -> bool:
+    """У приветствия уже есть кнопки — править его не нужно."""
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            return False
+    return isinstance(raw, dict) and bool(raw.get("buttons"))
+
+
+def _history_attachment(message: dict) -> str | None:
+    """Собирает вложения сообщения, чтобы правка текста их не стёрла."""
+    parts: list[str] = []
+    for item in message.get("attachments") or []:
+        if not isinstance(item, dict):
+            continue
+        kind = item.get("type")
+        body = item.get(kind) if isinstance(kind, str) else None
+        if not isinstance(body, dict) or body.get("owner_id") is None or body.get("id") is None:
+            continue
+        token = f"{kind}{body['owner_id']}_{body['id']}"
+        access_key = body.get("access_key")
+        parts.append(f"{token}_{access_key}" if access_key else token)
+    return ",".join(parts) or None
 
 
 def _vk_body(response: object) -> dict:
@@ -265,7 +414,7 @@ async def answer_waiting(api: Any, bot_key: str) -> None:
             continue
         if int(last.get("date") or 0) < cutoff:
             continue
-        await send_vk(api, peer_id, COMMUNITY_GREETING, build_main_keyboard())
+        await send_vk_greeting(api, peer_id)
         try:
             await api.request("messages.markAsRead", {"peer_id": peer_id})
         except Exception as exc:  # noqa: BLE001
@@ -286,11 +435,16 @@ async def attach_start_buttons(api: Any, bot_key: str) -> None:
             text = message.get("text") or ""
             if int(message.get("out") or 0) != 1 or "Нажми кнопку начать" not in text:
                 continue
+            if _keyboard_buttons(message.get("keyboard")):
+                continue
             edit: dict = {
                 "peer_id": peer_id,
                 "message": text,
                 "keyboard": build_main_keyboard(),
             }
+            attachment = _history_attachment(message)
+            if attachment:
+                edit["attachment"] = attachment
             if message.get("conversation_message_id"):
                 edit["conversation_message_id"] = message["conversation_message_id"]
             elif message.get("id"):
@@ -332,6 +486,31 @@ async def _leave_queue_later(peer: Peer) -> None:
     finally:
         if _search_timeouts.get(peer) is asyncio.current_task():
             del _search_timeouts[peer]
+
+
+async def handle_dating(peer: Peer) -> None:
+    """Кнопка «Чат знакомств»: меняет нижнюю клавиатуру на меню раздела."""
+    await gateway.send(peer, DATING_TEXT, "dating")
+
+
+async def handle_dating_rooms(peer: Peer) -> None:
+    """Кнопка «Выбрать комнату»: сообщение с inline-списком комнат."""
+    await gateway.send_rooms(peer, peer_room(peer))
+
+
+async def handle_dating_settings(peer: Peer) -> None:
+    """Кнопка «Настроить поиск»: блок с выбором пола собеседника."""
+    await gateway.send_settings(peer, _gender_choice.get(peer, ""))
+
+
+async def handle_main_menu(peer: Peer) -> None:
+    """Кнопка «Главное меню»: возвращает нижнюю клавиатуру с поиском."""
+    await gateway.send(peer, MENU_TEXT, "line")
+
+
+async def handle_premium(peer: Peer) -> None:
+    """Кнопка «Премиум статус»: картинка акции, список возможностей и кнопка оплаты."""
+    await gateway.send_premium(peer)
 
 
 async def handle_report(peer: Peer) -> None:

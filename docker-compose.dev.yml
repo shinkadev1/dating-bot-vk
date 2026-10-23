@@ -1,0 +1,7 @@
+# Локальная настройка бота и клавиатуры без Chat API.
+# Запуск: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+services:
+  bot:
+    environment:
+      DEV_MODE: "True"
