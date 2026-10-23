@@ -17,3 +17,10 @@ services:
       CF_ACCESS_CLIENT_ID: ${CF_ACCESS_CLIENT_ID:-}
       CF_ACCESS_CLIENT_SECRET: ${CF_ACCESS_CLIENT_SECRET:-}
       DEV_MODE: ${DEV_MODE:-False}
+    networks:
+      - chat-api
+
+networks:
+  chat-api:
+    external: true
+    name: ${CHAT_NETWORK:?Задайте CHAT_NETWORK}

@@ -115,8 +115,18 @@ if ! grep -qE '^CHAT_API_SERVICE_TOKEN=.+' .env 2>/dev/null; then
   echo "В секрете ENV_FILE нет CHAT_API_SERVICE_TOKEN." >&2
   exit 1
 fi
-if ! grep -qE '^CHAT_API_URL=.+' .env 2>/dev/null; then
-  set_env CHAT_API_URL "https://api.chatwithyou.site"
+if docker inspect vk-chat-api >/dev/null 2>&1; then
+  network=$(docker inspect vk-chat-api --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' | grep -v '^bridge$' | head -n 1 || true)
+  if [ -z "$network" ]; then
+    echo "У контейнера vk-chat-api нет сети Docker." >&2
+    exit 1
+  fi
+  set_env CHAT_NETWORK "$network"
+  set_env CHAT_API_URL "http://chat-api:8000"
+  echo "Бот в сети ${network}, Chat API: http://chat-api:8000"
+else
+  echo "Контейнер vk-chat-api не найден, бот не может встать в его сеть." >&2
+  exit 1
 fi
 if grep -qE '^CHAT_API_URL=.*chatwithyou\.site' .env \
   && { ! grep -qE '^CF_ACCESS_CLIENT_ID=.+' .env || ! grep -qE '^CF_ACCESS_CLIENT_SECRET=.+' .env; }; then
