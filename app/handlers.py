@@ -196,8 +196,7 @@ async def handle_incoming(
             if age is not None:
                 _awaiting_age.discard(peer)
                 _age_choice[peer] = age
-                await gateway.send(peer, DATING_TEXT, "dating")
-                await gateway.send_premium(peer)
+                await send_premium_gate(peer)
                 return
             if not command and not _is_start(text, payload):
                 await gateway.send(peer, AGE_TEXT, "dating")
@@ -210,7 +209,7 @@ async def handle_incoming(
             await handle_dating(peer)
             return
         if command == "dating_find":
-            await connect_with_partner(peer)
+            await handle_dating_find(peer)
             return
         if command == "dating_rooms":
             await handle_dating_rooms(peer)
@@ -336,8 +335,10 @@ def vk_start_handler(bot_key: str):
             return
         peer = Peer(bot_key, event.user_id)
         try:
-            if command in {"start", "dating_find"}:
+            if command == "start":
                 await connect_with_partner(peer)
+            elif command == "dating_find":
+                await handle_dating_find(peer)
             elif command == "stop":
                 await stop_active(peer)
             elif command == "dating":
@@ -486,6 +487,17 @@ async def _leave_queue_later(peer: Peer) -> None:
     finally:
         if _search_timeouts.get(peer) is asyncio.current_task():
             del _search_timeouts[peer]
+
+
+async def send_premium_gate(peer: Peer) -> None:
+    """Текст «нужен Премиум» и сразу промо-баннер с кнопкой оплаты."""
+    await gateway.send(peer, DATING_TEXT, "dating")
+    await gateway.send_premium(peer)
+
+
+async def handle_dating_find(peer: Peer) -> None:
+    """Кнопка «Найти девушку»: без премиума поиск не начинается — текст и баннер."""
+    await send_premium_gate(peer)
 
 
 async def handle_dating(peer: Peer) -> None:
