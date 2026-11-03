@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from app.api_client import SendResult
 from app.peer import Peer
+from app.ui import PREMIUM_URL
 
 
 class MockChatApi:
@@ -55,3 +56,6 @@ class MockChatApi:
 
     async def delivery_failed(self, peer: Peer) -> None:
         return None
+
+    async def premium_link(self, peer: Peer) -> dict:
+        return {"url": PREMIUM_URL, "premium_active": False, "premium_until": None}

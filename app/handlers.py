@@ -24,7 +24,6 @@ from app.ui import (
     FIND_BTN,
     FOUND_TEXT,
     GENDERS,
-    MEDIA_PREMIUM_TEXT,
     MENU_TEXT,
     NEW_PARTNER_BTN,
     NO_PARTNERS_TEXT,
@@ -154,7 +153,7 @@ async def handle_chat_line(
             await gateway.send(peer, PARTNER_LEFT_TEXT, "partner_left")
             return True
     if media_state == "premium":
-        await gateway.send(peer, MEDIA_PREMIUM_TEXT, "line")
+        await gateway.send_media_premium(peer)
     return True
 
 

@@ -9,8 +9,10 @@ from typing import Any
 import httpx
 
 from app.peer import Peer
+from app.premium import premium_offer
 from app.ui import (
     COMMUNITY_GREETING,
+    MEDIA_PREMIUM_TEXT,
     PREMIUM_STATUS_TEXT,
     ROOMS_TEXT,
     SETTINGS_TEXT,
@@ -23,6 +25,7 @@ from app.ui import (
     build_rooms_keyboard,
     build_settings_keyboard,
     new_random_id,
+    premium_active_text,
 )
 
 _ASSETS = Path(__file__).resolve().parent / "assets"
@@ -32,18 +35,22 @@ _greeting_photo_bytes: bytes | None = None
 _premium_photo_bytes: bytes | None = None
 
 
-def vk_keyboard(kind: str) -> str | None:
-    """Клавиатура под текстом. None — сообщение вообще без клавиатуры."""
+async def vk_keyboard(kind: str, peer: Peer) -> str | None:
+    """Клавиатура под текстом. None — сообщение вообще без клавиатуры.
+
+    Кнопка премиума ведёт на личную ссылку оплаты. В клавиатуре диалога она из кэша:
+    эта клавиатура уходит при каждой новой паре.
+    """
     if kind == "line":
         return build_bottom_keyboard()
     if kind == "chat":
-        return build_chat_keyboard()
+        return build_chat_keyboard(await premium_offer(peer))
     if kind == "partner_left":
         return build_partner_left_keyboard()
     if kind == "dating":
         return build_dating_keyboard()
     if kind == "premium":
-        return build_premium_keyboard()
+        return build_premium_keyboard(await premium_offer(peer, fresh=True))
     return build_main_keyboard()
 
 
@@ -109,8 +116,16 @@ async def send_vk_greeting(api: Any, peer_id: int) -> None:
     await send_vk(api, peer_id, COMMUNITY_GREETING, build_main_keyboard(), attachment)
 
 
-async def send_vk_premium(api: Any, peer_id: int) -> None:
-    """Промо премиума одним сообщением: картинка акции, текст и кнопка оплаты."""
+async def send_vk_premium(api: Any, peer: Peer) -> None:
+    """Промо премиума одним сообщением: картинка акции, текст и кнопка личной ссылки оплаты.
+
+    Если премиум уже действует, вместо продажи — срок премиума.
+    """
+    peer_id = peer.user_id
+    offer = await premium_offer(peer, fresh=True)
+    if offer.active:
+        await send_vk(api, peer_id, premium_active_text(offer), None)
+        return
     attachment = None
     try:
         attachment = await _vk_attachment(api, peer_id, "photo", "image/png", _premium_photo())
@@ -119,7 +134,7 @@ async def send_vk_premium(api: Any, peer_id: int) -> None:
             f"Не загрузил картинку премиума peer={peer_id}: {type(exc).__name__}: {exc}",
             flush=True,
         )
-    await send_vk(api, peer_id, PREMIUM_STATUS_TEXT, build_premium_keyboard(), attachment)
+    await send_vk(api, peer_id, PREMIUM_STATUS_TEXT, build_premium_keyboard(offer), attachment)
 
 
 class Gateway:
@@ -138,7 +153,7 @@ class Gateway:
             api = self._apis.get(peer.bot_key)
             if api is None:
                 raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
-            await send_vk(api, peer.user_id, text, vk_keyboard(kind))
+            await send_vk(api, peer.user_id, text, await vk_keyboard(kind, peer))
             return True
         except Exception as exc:  # noqa: BLE001 — сбой доставки не должен ронять общий обработчик
             print(
@@ -201,11 +216,34 @@ class Gateway:
             api = self._apis.get(peer.bot_key)
             if api is None:
                 raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
-            await send_vk_premium(api, peer.user_id)
+            await send_vk_premium(api, peer)
             return True
         except Exception as exc:  # noqa: BLE001
             print(
                 f"Не удалось отправить премиум vk:{peer.bot_key}:{peer.user_id}: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return False
+
+    async def send_media_premium(self, peer: Peer) -> bool:
+        """Отказ в медиа без премиума: текст и кнопка личной ссылки оплаты.
+
+        Если Chat API уже считает премиум активным (оплата прошла только что), пишет его срок.
+        """
+        try:
+            api = self._apis.get(peer.bot_key)
+            if api is None:
+                raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
+            offer = await premium_offer(peer, fresh=True)
+            if offer.active:
+                await send_vk(api, peer.user_id, premium_active_text(offer), None)
+            else:
+                await send_vk(api, peer.user_id, MEDIA_PREMIUM_TEXT, build_premium_keyboard(offer))
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не удалось отправить отказ в медиа vk:{peer.bot_key}:{peer.user_id}: "
                 f"{type(exc).__name__}: {exc}",
                 flush=True,
             )

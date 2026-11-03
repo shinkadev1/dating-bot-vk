@@ -128,6 +128,13 @@ class ChatApiClient:
     async def delivery_failed(self, peer: Peer) -> None:
         await self._request("POST", peer, "delivery-failed")
 
+    async def premium_link(self, peer: Peer) -> dict:
+        """Личная ссылка на оплату (24 часа) и срок премиума: url, premium_active, premium_until.
+
+        503 — оплата в Chat API не настроена, приходит как ChatApiError.
+        """
+        return await self._request("GET", peer, "premium/link")
+
 
 def build_chat_api() -> ChatApiClient | MockChatApi:
     """Настоящий клиент или локальная заглушка, если включён DEV_MODE."""

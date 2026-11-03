@@ -1,9 +1,15 @@
 """Тексты, подписи кнопок и клавиатуры сообщений."""
 
+from __future__ import annotations
+
 import json
 import random
+from typing import TYPE_CHECKING
 
 from vkbottle import Callback, Keyboard, KeyboardButtonColor, OpenLink, Text
+
+if TYPE_CHECKING:
+    from app.premium import PremiumOffer
 
 MENU_TEXT = "Найди собеседника прямо сейчас"
 COMMUNITY_GREETING = (
@@ -39,11 +45,11 @@ PARTNER_LEFT_TEXT = (
 REPORT_SENT_TEXT = "Жалоба отправлена. Спасибо, что сообщили."
 UNDELIVERED_TEXT = "❌ Собеседник недоступен, диалог закончен.\nНажми «Начать», чтобы найти нового собеседника."
 SERVICE_DOWN_TEXT = "Сервис временно недоступен. Попробуй через минуту."
-MEDIA_PREMIUM_TEXT = (
-    "Чтобы отправлять медиа, получите премиум:\n"
-    "https://vk.ru/club242172702"
-)
+# Ссылка на оплату уходит только кнопкой OpenLink: из текста ВК соберёт сниппет и сам откроет её.
+MEDIA_PREMIUM_TEXT = "Чтобы отправлять медиа, получите премиум 👇"
+# Запасная ссылка, если Chat API не выдал личную.
 PREMIUM_URL = "https://clck.su/cDapp"
+PREMIUM_ACTIVE_TEXT = "👑 Премиум активен"
 PREMIUM_STATUS_TEXT = (
     "⚡ Временная акция, скидка 99%:\n\n"
     "🍓 Настройка поиска: например, только девушки младше 25 лет\n"
@@ -146,13 +152,28 @@ def build_dating_keyboard() -> str:
     return keyboard.get_json()
 
 
-def build_premium_keyboard() -> str:
-    """Под промо премиума: кнопка на страницу оплаты."""
-    keyboard = Keyboard(inline=True).add(
-        OpenLink(PREMIUM_URL, PREMIUM_BTN),
-        color=KeyboardButtonColor.POSITIVE,
-    )
-    return keyboard.get_json()
+def premium_active_text(offer: PremiumOffer) -> str:
+    """«Премиум активен до ДД.ММ.ГГГГ»; без срока — просто «Премиум активен»."""
+    if not offer.until_text:
+        return PREMIUM_ACTIVE_TEXT
+    return f"{PREMIUM_ACTIVE_TEXT} до {offer.until_text}"
+
+
+def _add_premium_button(keyboard: Keyboard, offer: PremiumOffer) -> Keyboard:
+    """Кнопка личной ссылки на оплату или, если премиум уже есть, кнопка с его сроком."""
+    if offer.active:
+        return keyboard.add(
+            Callback(premium_active_text(offer), payload=json.dumps({"command": "premium"})),
+            color=KeyboardButtonColor.POSITIVE,
+        )
+    return keyboard.add(OpenLink(offer.url, PREMIUM_BTN), color=KeyboardButtonColor.POSITIVE)
+
+
+def build_premium_keyboard(offer: PremiumOffer) -> str | None:
+    """Под промо премиума: кнопка на личную страницу оплаты. Активному премиуму продавать нечего."""
+    if offer.active:
+        return None
+    return _add_premium_button(Keyboard(inline=True), offer).get_json()
 
 
 def build_rooms_keyboard(selected: str) -> str:
@@ -190,8 +211,8 @@ def build_settings_keyboard(selected: str) -> str:
     return keyboard.get_json()
 
 
-def build_chat_keyboard() -> str:
-    """Под текстом «комната найдена»: «Новый собеседник», «Купить премиум» и «Остановить диалог»."""
+def build_chat_keyboard(offer: PremiumOffer) -> str:
+    """Под текстом «комната найдена»: «Новый собеседник», премиум и «Остановить диалог»."""
     keyboard = (
         Keyboard(inline=True)
         .add(
@@ -199,10 +220,9 @@ def build_chat_keyboard() -> str:
             color=KeyboardButtonColor.PRIMARY,
         )
         .row()
-        .add(
-            OpenLink(PREMIUM_URL, PREMIUM_BTN),
-            color=KeyboardButtonColor.POSITIVE,
-        )
+    )
+    keyboard = (
+        _add_premium_button(keyboard, offer)
         .row()
         .add(
             Callback(STOP_BTN, payload=json.dumps({"command": "stop"})),
