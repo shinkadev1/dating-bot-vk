@@ -9,10 +9,11 @@ from typing import Any
 import httpx
 
 from app.peer import Peer
-from app.premium import premium_offer
+from app.premium import PremiumOffer, premium_offer
 from app.ui import (
     COMMUNITY_GREETING,
     MEDIA_PREMIUM_TEXT,
+    PARTNER_NO_PREMIUM_TEXT,
     PREMIUM_STATUS_TEXT,
     ROOMS_TEXT,
     SETTINGS_TEXT,
@@ -116,13 +117,14 @@ async def send_vk_greeting(api: Any, peer_id: int) -> None:
     await send_vk(api, peer_id, COMMUNITY_GREETING, build_main_keyboard(), attachment)
 
 
-async def send_vk_premium(api: Any, peer: Peer) -> None:
+async def send_vk_premium(api: Any, peer: Peer, offer: PremiumOffer | None = None) -> None:
     """Промо премиума одним сообщением: картинка акции, текст и кнопка личной ссылки оплаты.
 
     Если премиум уже действует, вместо продажи — срок премиума.
     """
     peer_id = peer.user_id
-    offer = await premium_offer(peer, fresh=True)
+    if offer is None:
+        offer = await premium_offer(peer, fresh=True)
     if offer.active:
         await send_vk(api, peer_id, premium_active_text(offer), None)
         return
@@ -210,13 +212,13 @@ class Gateway:
             )
             return False
 
-    async def send_premium(self, peer: Peer) -> bool:
+    async def send_premium(self, peer: Peer, offer: PremiumOffer | None = None) -> bool:
         """Промо премиума с картинкой акции в личку сообщества."""
         try:
             api = self._apis.get(peer.bot_key)
             if api is None:
                 raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
-            await send_vk_premium(api, peer)
+            await send_vk_premium(api, peer, offer)
             return True
         except Exception as exc:  # noqa: BLE001
             print(
@@ -226,18 +228,23 @@ class Gateway:
             )
             return False
 
-    async def send_media_premium(self, peer: Peer) -> bool:
-        """Отказ в медиа без премиума: текст и кнопка личной ссылки оплаты.
+    async def send_media_premium(self, peer: Peer, *, partner: bool = False) -> bool:
+        """Отказ в медиа: текст и кнопка личной ссылки оплаты.
 
-        Если Chat API уже считает премиум активным (оплата прошла только что), пишет его срок.
+        partner — премиума нет у собеседника: продавать нечего, только объяснение.
+        Если Chat API уже считает премиум отправителя активным, отказ мог быть только
+        из-за собеседника — пишет то же объяснение.
         """
         try:
             api = self._apis.get(peer.bot_key)
             if api is None:
                 raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
+            if partner:
+                await send_vk(api, peer.user_id, PARTNER_NO_PREMIUM_TEXT, None)
+                return True
             offer = await premium_offer(peer, fresh=True)
             if offer.active:
-                await send_vk(api, peer.user_id, premium_active_text(offer), None)
+                await send_vk(api, peer.user_id, PARTNER_NO_PREMIUM_TEXT, None)
             else:
                 await send_vk(api, peer.user_id, MEDIA_PREMIUM_TEXT, build_premium_keyboard(offer))
             return True

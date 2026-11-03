@@ -360,7 +360,10 @@ async def store_vk_media(message: Message, peer: Peer) -> str:
             key = await chat_api.store_media(peer, kind, data)
         except NotChattingError:
             return "left"
-        except NotPremiumError:
+        except NotPremiumError as exc:
+            if exc.partner:
+                print(f"Собеседник без премиума не получит медиа {peer}", flush=True)
+                return "partner_premium"
             print(f"Медиа только у премиума {peer}", flush=True)
             return "premium"
         except Exception as exc:  # noqa: BLE001 — одно вложение не должно ронять остальные

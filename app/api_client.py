@@ -23,7 +23,12 @@ class NotChattingError(ChatApiError):
 
 
 class NotPremiumError(ChatApiError):
-    """Медиа может отправить только пользователь с премиумом."""
+    """Медиа может отправить только пользователь с премиумом. Текст ошибки — ответ Chat API."""
+
+    @property
+    def partner(self) -> bool:
+        """Премиума нет у собеседника: «Собеседник без премиума не может получать медиа»."""
+        return "собеседник" in str(self).casefold()
 
 
 @dataclass(frozen=True)

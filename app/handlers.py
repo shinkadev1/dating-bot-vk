@@ -15,6 +15,7 @@ from app.api_client import ChatApiError, NotChattingError, chat_api
 from app.gateway import gateway, send_vk_greeting
 from app.media import store_vk_media
 from app.peer import Peer
+from app.premium import premium_offer
 from app.ui import (
     AGE_TEXT,
     CHAT_BTN_NEXT,
@@ -152,8 +153,8 @@ async def handle_chat_line(
         if not delivered:
             await gateway.send(peer, PARTNER_LEFT_TEXT, "partner_left")
             return True
-    if media_state == "premium":
-        await gateway.send_media_premium(peer)
+    if media_state in {"premium", "partner_premium"}:
+        await gateway.send_media_premium(peer, partner=media_state == "partner_premium")
     return True
 
 
@@ -489,9 +490,14 @@ async def _leave_queue_later(peer: Peer) -> None:
 
 
 async def send_premium_gate(peer: Peer) -> None:
-    """Текст «нужен Премиум» и сразу промо-баннер с кнопкой оплаты."""
-    await gateway.send(peer, DATING_TEXT, "dating")
-    await gateway.send_premium(peer)
+    """Текст «нужен Премиум» и сразу промо-баннер с кнопкой оплаты.
+
+    При активном премиуме «нужен Премиум» не пишется: промо само покажет срок.
+    """
+    offer = await premium_offer(peer, fresh=True)
+    if not offer.active:
+        await gateway.send(peer, DATING_TEXT, "dating")
+    await gateway.send_premium(peer, offer)
 
 
 async def handle_dating_find(peer: Peer) -> None:
