@@ -49,7 +49,7 @@ SERVICE_DOWN_TEXT = "Сервис временно недоступен. Поп�
 MEDIA_PREMIUM_TEXT = "Чтобы отправлять медиа, получите премиум 👇"
 PARTNER_NO_PREMIUM_TEXT = "Собеседник без премиума не может получать фото, видео и аудио"
 # Запасная ссылка, если Chat API не выдал личную.
-PREMIUM_URL = "https://clck.su/cDapp"
+PREMIUM_URL = "https://pay.chatwithyou.site/"
 PREMIUM_ACTIVE_TEXT = "👑 Премиум активен"
 PREMIUM_STATUS_TEXT = (
     "⚡ Временная акция, скидка 99%:\n\n"
