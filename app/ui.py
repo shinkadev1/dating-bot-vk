@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import random
 from typing import TYPE_CHECKING
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from vkbottle import Callback, Keyboard, KeyboardButtonColor, OpenLink, Text
 
@@ -50,6 +51,15 @@ MEDIA_PREMIUM_TEXT = "Чтобы отправлять медиа, получит
 PARTNER_NO_PREMIUM_TEXT = "Собеседник без премиума не может получать фото, видео и аудио"
 # Запасная ссылка, если Chat API не выдал личную.
 PREMIUM_URL = "https://pay.chatwithyou.site/"
+# Тарифы оплаты: (plan, подпись кнопки). Страница оплаты по ссылке с plan сразу открывает заказ.
+TARIFFS: tuple[tuple[str, str], ...] = (
+    ("trial", "🎁 Пробный 3 дня — 1 ₽"),
+    ("week", "Неделя — 299 ₽"),
+    ("month", "Месяц — 999 ₽"),
+    ("year", "Год — 2999 ₽"),
+)
+# Продление при активном премиуме — без пробного.
+RENEW_PLANS = ("week", "month", "year")
 PREMIUM_ACTIVE_TEXT = "👑 Премиум активен"
 PREMIUM_STATUS_TEXT = (
     "⚡ Временная акция, скидка 99%:\n\n"
@@ -170,11 +180,23 @@ def _add_premium_button(keyboard: Keyboard, offer: PremiumOffer) -> Keyboard:
     return keyboard.add(OpenLink(offer.url, PREMIUM_BTN), color=KeyboardButtonColor.POSITIVE)
 
 
-def build_premium_keyboard(offer: PremiumOffer) -> str | None:
-    """Под промо премиума: кнопка на личную страницу оплаты. Активному премиуму продавать нечего."""
-    if offer.active:
-        return None
-    return _add_premium_button(Keyboard(inline=True), offer).get_json()
+def plan_url(url: str, plan: str) -> str:
+    """Добавляет к ссылке оплаты параметр plan, сохраняя существующий query."""
+    parts = urlsplit(url)
+    query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k != "plan"]
+    query.append(("plan", plan))
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
+def build_premium_keyboard(offer: PremiumOffer) -> str:
+    """Inline-кнопки тарифов, по одной в ряду. Активному премиуму — только продление без пробного."""
+    plans = [item for item in TARIFFS if not offer.active or item[0] in RENEW_PLANS]
+    keyboard = Keyboard(inline=True)
+    for index, (plan, label) in enumerate(plans):
+        if index:
+            keyboard.row()
+        keyboard.add(OpenLink(plan_url(offer.url, plan), label), color=KeyboardButtonColor.POSITIVE)
+    return keyboard.get_json()
 
 
 def build_rooms_keyboard(selected: str) -> str:

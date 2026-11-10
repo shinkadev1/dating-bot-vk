@@ -126,7 +126,7 @@ async def send_vk_premium(api: Any, peer: Peer, offer: PremiumOffer | None = Non
     if offer is None:
         offer = await premium_offer(peer, fresh=True)
     if offer.active:
-        await send_vk(api, peer_id, premium_active_text(offer), None)
+        await send_vk(api, peer_id, premium_active_text(offer), build_premium_keyboard(offer))
         return
     attachment = None
     try:
