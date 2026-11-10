@@ -2,7 +2,9 @@
 
 import json
 import unittest
+from unittest.mock import AsyncMock, MagicMock
 
+from app.handlers import choose_room
 from app.ui import DEFAULT_ROOM, build_dating_keyboard, build_rooms_keyboard
 
 CITIES = ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Любой город"]
@@ -24,6 +26,20 @@ class ChooseCityTest(unittest.TestCase):
         self.assertTrue(all(len(l) <= 40 for l in labels))
         payloads = [json.loads(b["action"]["payload"]) for r in rows for b in r]
         self.assertTrue(all(p["command"] == "room" for p in payloads))
+
+
+class StaleRoomButtonTest(unittest.IsolatedAsyncioTestCase):
+    async def test_old_room_button_is_answered_and_shows_cities(self):
+        event = MagicMock()
+        event.user_id = 5
+        event.payload = json.dumps({"command": "room", "room": "talk"})
+        event.edit_message = AsyncMock()
+        event.show_snackbar = AsyncMock()
+        await choose_room(event, "main")
+        keyboard = json.loads(event.edit_message.call_args.kwargs["keyboard"])
+        labels = [b["action"]["label"] for r in keyboard["buttons"] for b in r]
+        self.assertIn("Санкт-Петербург ✅", labels)
+        event.show_snackbar.assert_awaited_once()
 
 
 if __name__ == "__main__":

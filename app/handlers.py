@@ -269,17 +269,31 @@ def vk_handler(bot_key: str):
 
 
 async def choose_room(event: MessageEvent, bot_key: str) -> None:
-    """Нажатие комнаты: запоминает выбор и переносит галочку в том же сообщении."""
+    """Нажатие города: запоминает выбор и переносит галочку в том же сообщении.
+
+    Кнопка из старого сообщения со списком комнат: отвечаем на нажатие и
+    заменяем список на города, чтобы кнопка не «крутилась» до таймаута.
+    """
     room = parse_payload(event.payload).get("room")
-    if event.user_id is None or event.user_id <= 0 or room not in ROOMS:
+    if event.user_id is None or event.user_id <= 0:
         return
     peer = Peer(bot_key, event.user_id)
+    if room not in ROOMS:
+        try:
+            await event.edit_message(message=ROOMS_TEXT, keyboard=build_rooms_keyboard(peer_room(peer)))
+        except Exception as exc:  # noqa: BLE001 — старое сообщение можно и не обновить
+            print(f"Не обновил старый список vk:{bot_key}:{event.user_id}: {type(exc).__name__}: {exc}", flush=True)
+        try:
+            await event.show_snackbar("Список обновлён — выберите город")
+        except Exception as exc:  # noqa: BLE001
+            print(f"Не подтвердил нажатие: {type(exc).__name__}: {exc}", flush=True)
+        return
     _room_choice[peer] = room
     try:
         await event.edit_message(message=ROOMS_TEXT, keyboard=build_rooms_keyboard(room))
     except Exception as exc:  # noqa: BLE001 — клавиатуру можно и не обновить
         print(
-            f"Не обновил комнату vk:{bot_key}:{event.user_id}: {type(exc).__name__}: {exc}",
+            f"Не обновил город vk:{bot_key}:{event.user_id}: {type(exc).__name__}: {exc}",
             flush=True,
         )
     try:
