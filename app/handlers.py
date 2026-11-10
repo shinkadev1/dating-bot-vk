@@ -501,7 +501,7 @@ async def send_premium_gate(peer: Peer) -> None:
 
 
 async def handle_dating_find(peer: Peer) -> None:
-    """Кнопка «Найти девушку»: без премиума поиск не начинается — текст и баннер."""
+    """Кнопка «Пошлый чат»: без премиума поиск не начинается — текст и баннер."""
     await send_premium_gate(peer)
 
 

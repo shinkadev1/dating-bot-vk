@@ -23,7 +23,7 @@ FIND_BTN = "🔍 Найти собеседника"
 DATING_BTN = "💘 Чат знакомств"
 PREMIUM_STATUS_BTN = "👑 Премиум статус"
 
-DATING_FIND_BTN = "❤️ Найти девушку"
+DATING_FIND_BTN = "🔥 Пошлый чат"
 DATING_ROOMS_BTN = "🌍 Выбрать комнату"
 DATING_SETTINGS_BTN = "⚙️ Настроить поиск"
 MAIN_MENU_BTN = "◀️ Главное меню"
