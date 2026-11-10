@@ -283,7 +283,7 @@ async def choose_room(event: MessageEvent, bot_key: str) -> None:
             flush=True,
         )
     try:
-        await event.show_snackbar(f"Комната: {ROOMS[room]}")
+        await event.show_snackbar(f"Город: {ROOMS[room]}")
     except Exception as exc:  # noqa: BLE001
         print(f"Не показал уведомление: {type(exc).__name__}: {exc}", flush=True)
 
@@ -511,7 +511,7 @@ async def handle_dating(peer: Peer) -> None:
 
 
 async def handle_dating_rooms(peer: Peer) -> None:
-    """Кнопка «Выбрать комнату»: сообщение с inline-списком комнат."""
+    """Кнопка «Выбрать город»: сообщение с inline-списком городов."""
     await gateway.send_rooms(peer, peer_room(peer))
 
 

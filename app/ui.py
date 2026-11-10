@@ -24,7 +24,7 @@ DATING_BTN = "💘 Чат знакомств"
 PREMIUM_STATUS_BTN = "👑 Премиум статус"
 
 DATING_FIND_BTN = "🔥 Пошлый чат"
-DATING_ROOMS_BTN = "🌍 Выбрать комнату"
+DATING_ROOMS_BTN = "📍 Выбрать город"
 DATING_SETTINGS_BTN = "⚙️ Настроить поиск"
 MAIN_MENU_BTN = "◀️ Главное меню"
 
@@ -70,16 +70,18 @@ PREMIUM_STATUS_TEXT = (
     "🚫 Никакой рекламы"
 )
 DATING_TEXT = "👑 Для продолжения нужен Премиум"
-ROOMS_TEXT = "✌️ Выберите комнату, в которой хотите искать собеседников:"
+# Раньше здесь были комнаты; имена ROOMS/room оставлены, теперь это города.
+ROOMS_TEXT = "📍 Выберите город, в котором хотите искать собеседников:"
 ROOMS: dict[str, str] = {
-    "spb": "Встречи в г. Санкт-Петербург",
-    "talk": "Общение",
-    "photo": "Обмен фото",
-    "voice": "Голоса",
-    "naughty": "Пошлый",
-    "dating": "Знакомства",
+    "msk": "Москва",
+    "spb": "Санкт-Петербург",
+    "nsk": "Новосибирск",
+    "ekb": "Екатеринбург",
+    "kzn": "Казань",
+    "nnov": "Нижний Новгород",
+    "any": "Любой город",
 }
-ROOM_ROWS = (("spb",), ("talk", "photo"), ("voice", "naughty"), ("dating",))
+ROOM_ROWS = (("msk", "spb"), ("nsk", "ekb"), ("kzn", "nnov"), ("any",))
 DEFAULT_ROOM = "spb"
 SETTINGS_TEXT = (
     "💎 Только для Премиум-пользователей\n\n"
@@ -200,7 +202,7 @@ def build_premium_keyboard(offer: PremiumOffer) -> str:
 
 
 def build_rooms_keyboard(selected: str) -> str:
-    """Inline-выбор комнаты: выбранная отмечена галочкой."""
+    """Inline-выбор города: выбранный отмечен галочкой."""
     keyboard = Keyboard(inline=True)
     for index, row in enumerate(ROOM_ROWS):
         for key in row:
