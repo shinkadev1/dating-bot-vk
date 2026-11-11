@@ -16,27 +16,26 @@ from app.gateway import gateway, send_vk_greeting
 from app.media import store_vk_media
 from app.peer import Peer
 from app.premium import premium_offer
+from app.content import button_variants
 from app.ui import (
+    COMMUNITY_GREETING,
+    ROOMS_REFRESHED_TOAST,
+    city_selected_toast,
     AGE_TEXT,
     CHAT_BTN_NEXT,
-    CHAT_BTN_STOP,
     DATING_TEXT,
     DEFAULT_ROOM,
-    FIND_BTN,
     FOUND_TEXT,
     GENDERS,
     MENU_TEXT,
-    NEW_PARTNER_BTN,
     NO_PARTNERS_TEXT,
     PARTNER_LEFT_TEXT,
-    REPORT_BTN,
     REPORT_SENT_TEXT,
     ROOMS,
     ROOMS_TEXT,
     SEARCHING_TEXT,
     SERVICE_DOWN_TEXT,
     SETTINGS_TEXT,
-    STOP_BTN,
     STOPPED_TEXT,
     build_main_keyboard,
     build_rooms_keyboard,
@@ -87,10 +86,20 @@ def parse_payload(raw: Any) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+# Подписи кнопок и их прежние подписи (content.json, button_aliases) в нижнем регистре.
+_START_LABELS = button_variants("NEW_PARTNER_BTN") | button_variants("FIND_BTN")
+_STOP_LABELS = button_variants("CHAT_BTN_STOP") | button_variants("STOP_BTN")
+
+
+def _is_greeting(text: str) -> bool:
+    """Наше приветствие: текущий текст из content.json или прежний с «Нажми кнопку начать»."""
+    return text.strip() == COMMUNITY_GREETING.strip() or "Нажми кнопку начать" in text
+
+
 def _is_start(text: str, payload: dict) -> bool:
     """Сообщение «Начать», «Новый собеседник», /start или команда start из payload."""
     lowered = text.strip().lower()
-    if lowered in {"начать", "/start", "start", NEW_PARTNER_BTN.lower(), FIND_BTN.lower()}:
+    if lowered in {"начать", "/start", "start", *_START_LABELS}:
         return True
     command = lowered.split()[0].split("@", 1)[0] if lowered else ""
     if command in {"начать", "/start", "start"}:
@@ -102,7 +111,7 @@ def _is_report(text: str, payload: dict) -> bool:
     """Кнопка «Пожаловаться» или команда report из payload."""
     if payload.get("command") == "report":
         return True
-    return text.strip().lower() in {REPORT_BTN.lower(), "пожаловаться"}
+    return text.strip().lower() in {*button_variants("REPORT_BTN"), "пожаловаться"}
 
 
 async def stop_active(peer: Peer) -> None:
@@ -115,7 +124,7 @@ async def stop_active(peer: Peer) -> None:
 
 async def handle_stop(peer: Peer, text: str, active: bool) -> bool:
     """Заканчивает диалог или поиск и возвращает основное меню."""
-    if text.strip().lower() not in {CHAT_BTN_STOP.lower(), STOP_BTN.lower()} or not active:
+    if text.strip().lower() not in _STOP_LABELS or not active:
         return False
     await stop_active(peer)
     return True
@@ -123,7 +132,7 @@ async def handle_stop(peer: Peer, text: str, active: bool) -> bool:
 
 async def handle_next(peer: Peer, text: str, searching: bool) -> bool:
     """Кнопка «Следующий собеседник» запускает новый поиск."""
-    if text != CHAT_BTN_NEXT:
+    if text != CHAT_BTN_NEXT and text.strip().lower() not in button_variants("CHAT_BTN_NEXT"):
         return False
     if searching:
         await gateway.send(peer, SEARCHING_TEXT, "line")
@@ -284,7 +293,7 @@ async def choose_room(event: MessageEvent, bot_key: str) -> None:
         except Exception as exc:  # noqa: BLE001 — старое сообщение можно и не обновить
             print(f"Не обновил старый список vk:{bot_key}:{event.user_id}: {type(exc).__name__}: {exc}", flush=True)
         try:
-            await event.show_snackbar("Список обновлён — выберите город")
+            await event.show_snackbar(ROOMS_REFRESHED_TOAST)
         except Exception as exc:  # noqa: BLE001
             print(f"Не подтвердил нажатие: {type(exc).__name__}: {exc}", flush=True)
         return
@@ -297,7 +306,7 @@ async def choose_room(event: MessageEvent, bot_key: str) -> None:
             flush=True,
         )
     try:
-        await event.show_snackbar(f"Город: {ROOMS[room]}")
+        await event.show_snackbar(city_selected_toast(room))
     except Exception as exc:  # noqa: BLE001
         print(f"Не показал уведомление: {type(exc).__name__}: {exc}", flush=True)
 
@@ -448,7 +457,7 @@ async def attach_start_buttons(api: Any, bot_key: str) -> None:
         history = await api.request("messages.getHistory", {"peer_id": peer_id, "count": 8})
         for message in _vk_body(history).get("items") or []:
             text = message.get("text") or ""
-            if int(message.get("out") or 0) != 1 or "Нажми кнопку начать" not in text:
+            if int(message.get("out") or 0) != 1 or not _is_greeting(text):
                 continue
             if _keyboard_buttons(message.get("keyboard")):
                 continue

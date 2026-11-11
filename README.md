@@ -35,3 +35,17 @@ Push в `master` собирает образ `dating-bot` и перезапус�
 - `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` — SSH на сервер бота
 - `DEPLOY_PATH` — каталог бота, по умолчанию `~/dating-bot-vk`
 - `ENV_FILE` — `VK_TOKEN`, `CHAT_API_SERVICE_TOKEN`, `CHAT_API_URL`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`
+
+## Тексты, кнопки и картинки
+
+Всё, что видит пользователь, лежит отдельно от кода в `app/content/`:
+
+- `content.json` — тексты сообщений (`texts`), подписи кнопок (`buttons`) и их прежние подписи
+  (`button_aliases`), списки городов, пола и тарифов (`lists`), раскладка и цвета клавиатур (`keyboards`),
+  картинки (`images`) и описание экранов для превью (`screens`);
+- `images/` — баннеры.
+
+Файл редактируется в Bot CRM; код читает его при запуске (`app/content.py`), поэтому после правки
+бота нужно перезапустить. Команды кнопок (payload) остаются в коде (`app/ui.py: _BUTTON_COMMANDS`),
+поэтому переименование кнопки ничего не ломает. ВК не принимает подписи длиннее 40 символов —
+это проверяет `tests/test_content.py` вместе с целостностью ссылок.

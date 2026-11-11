@@ -14,7 +14,9 @@ VK Long Poll → handlers → REST Chat API. Обратная доставка: 
 | `app/longpoll.py` | Входящие события VK. |
 | `app/startup.py` | Подготовка сообществ и обработка ожидающих сообщений. |
 | `app/handlers.py` | Команды, фазы UI, комнаты, пол и возраст. |
-| `app/ui.py` | Тексты и клавиатуры. |
+| `app/content/content.json` | Контент из Bot CRM: тексты, подписи кнопок и их прежние подписи, списки, раскладка и цвета клавиатур, картинки, экраны. |
+| `app/content.py` | Загрузка и проверка content.json при старте (`ContentError`). |
+| `app/ui.py` | Имена текстов и сборка клавиатур VK из content.json; команды кнопок (payload); ссылки. |
 | `app/gateway.py` | Доставка текста, баннеров и медиа. |
 | `app/api_client.py` | REST Chat API. |
 | `app/premium.py` | Личная ссылка оплаты премиума и его срок, кэш на пользователя. |

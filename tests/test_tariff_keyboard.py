@@ -2,7 +2,7 @@ import json
 import unittest
 
 from app.premium import FALLBACK_OFFER, PremiumOffer
-from app.ui import PREMIUM_URL, build_premium_keyboard, plan_url
+from app.ui import PREMIUM_URL, RENEW_PLANS, TARIFFS, build_premium_keyboard, plan_url
 
 PERSONAL = "https://pay.chatwithyou.site/checkout/tok?utm_source=vk&utm_campaign=premium"
 
@@ -18,7 +18,7 @@ class TariffKeyboardTest(unittest.TestCase):
         res = buttons(build_premium_keyboard(PremiumOffer(PERSONAL)))
         self.assertEqual(
             [b[0] for b in res],
-            ["🎁 Пробный 3 дня — 1 ₽", "Неделя — 299 ₽", "Месяц — 999 ₽", "Год — 2999 ₽"],
+            [label for _, label in TARIFFS],
         )
         self.assertEqual(
             [b[1] for b in res], [f"{PERSONAL}&plan={p}" for p in ("trial", "week", "month", "year")]
@@ -27,7 +27,7 @@ class TariffKeyboardTest(unittest.TestCase):
 
     def test_three_buttons_with_active_premium(self):
         res = buttons(build_premium_keyboard(PremiumOffer(PERSONAL, active=True)))
-        self.assertEqual([b[0] for b in res], ["Неделя — 299 ₽", "Месяц — 999 ₽", "Год — 2999 ₽"])
+        self.assertEqual([b[0] for b in res], [label for plan, label in TARIFFS if plan in RENEW_PLANS])
         self.assertNotIn("plan=trial", " ".join(b[1] for b in res))
 
     def test_fallback_url_without_query(self):

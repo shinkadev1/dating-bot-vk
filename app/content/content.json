@@ -1,0 +1,404 @@
+{
+  "format": "bot-crm/1",
+  "platform": "vk",
+  "about": "Тексты, кнопки, списки, клавиатуры и картинки бота. Редактируется в Bot CRM; код читает файл при запуске.",
+  "texts": {
+    "COMMUNITY_GREETING": "👋 Привет! Это чат для анонимных знакомств, флирта и легкого общения\nНайди собеседника прямо сейчас. Нажми кнопку начать",
+    "MENU_TEXT": "Найди собеседника прямо сейчас",
+    "SEARCHING_TEXT": "🔎 Ищем собеседника...",
+    "NO_PARTNERS_TEXT": "Сейчас собеседников нет, приходите чуть позже 😔",
+    "FOUND_TEXT": "Комната 💬 найдена. Общайтесь!",
+    "STOPPED_TEXT": "Найди собеседника прямо сейчас\n\nДиалог остановлен. Нажми «Начать», чтобы начать снова.",
+    "PARTNER_LEFT_TEXT": "Собеседник закончил диалог 😔\n\nПожалуйста, нажмите Пожаловаться, если встретили спам.",
+    "REPORT_SENT_TEXT": "Жалоба отправлена. Спасибо, что сообщили.",
+    "UNDELIVERED_TEXT": "❌ Собеседник недоступен, диалог закончен.\nНажми «Начать», чтобы найти нового собеседника.",
+    "SERVICE_DOWN_TEXT": "Сервис временно недоступен. Попробуй через минуту.",
+    "MEDIA_PREMIUM_TEXT": "Чтобы отправлять медиа, получите премиум 👇",
+    "PARTNER_NO_PREMIUM_TEXT": "Собеседник без премиума не может получать фото, видео и аудио",
+    "PREMIUM_STATUS_TEXT": "⚡ Временная акция, скидка 99%:\n\n🍓 Настройка поиска: например, только девушки младше 25 лет\n💋 Комнаты для общения по тематике: флирт, знакомства\n📹 Отправка и получение любых фото, видео и голосовых без ограничений\n🔝 Первое место в поиске\n🚫 Никакой рекламы",
+    "PREMIUM_ACTIVE_TEXT": "👑 Премиум активен",
+    "PREMIUM_ACTIVE_UNTIL_TEXT": "👑 Премиум активен до {date}",
+    "DATING_TEXT": "👑 Для продолжения нужен Премиум",
+    "ROOMS_TEXT": "📍 Выберите город, в котором хотите искать собеседников:",
+    "SETTINGS_TEXT": "💎 Только для Премиум-пользователей\n\n👱‍♀️👱 Пожалуйста, выберите желаемый пол собеседника:\n\n🔍 Бот будет искать собеседников только с заданными параметрами поиска",
+    "AGE_TEXT": "✏️ Введите желаемый возраст собеседника\n\nℹ️ Вы можете настроить поиск \"от 26\" введя \"26+\", или указать диапазон поиска, например, \"24-34\"",
+    "PARTNER_MESSAGE": "👤 Собеседник:\n{text}",
+    "ROOMS_REFRESHED_TOAST": "Список обновлён — выберите город",
+    "CITY_SELECTED_TOAST": "Город: {city}"
+  },
+  "buttons": {
+    "START_BTN": "Начать",
+    "FIND_BTN": "🔍 Найти собеседника",
+    "DATING_BTN": "💘 Чат знакомств",
+    "PREMIUM_STATUS_BTN": "👑 Премиум статус",
+    "DATING_FIND_BTN": "🔥 Пошлый чат",
+    "DATING_ROOMS_BTN": "📍 Выбрать город",
+    "DATING_SETTINGS_BTN": "⚙️ Настроить поиск",
+    "MAIN_MENU_BTN": "◀️ Главное меню",
+    "CHAT_BTN_NEXT": "➡️ Следующий собеседник",
+    "CHAT_BTN_STOP": "🛑 Закончить диалог",
+    "NEW_PARTNER_BTN": "🔍 Новый собеседник",
+    "PREMIUM_BTN": "💎 Купить премиум",
+    "STOP_BTN": "Остановить диалог",
+    "REPORT_BTN": "🚫 Пожаловаться"
+  },
+  "button_aliases": {},
+  "lists": {
+    "ROOMS": {
+      "title": "Города",
+      "items": {
+        "msk": "Москва",
+        "spb": "Санкт-Петербург",
+        "nsk": "Новосибирск",
+        "ekb": "Екатеринбург",
+        "kzn": "Казань",
+        "nnov": "Нижний Новгород",
+        "any": "Любой город"
+      }
+    },
+    "GENDERS": {
+      "title": "Пол собеседника",
+      "items": {
+        "female": "👱‍♀️ Женский",
+        "male": "👱‍♂️ Мужской",
+        "any": "Не важно"
+      }
+    },
+    "TARIFFS": {
+      "title": "Тарифы премиума",
+      "items": {
+        "trial": "🎁 Пробный 3 дня — 1 ₽",
+        "week": "Неделя — 299 ₽",
+        "month": "Месяц — 999 ₽",
+        "year": "Год — 2999 ₽"
+      }
+    }
+  },
+  "keyboards": {
+    "MAIN_KEYBOARD": {
+      "title": "Кнопка «Начать»",
+      "type": "inline",
+      "rows": [
+        [
+          {
+            "button": "START_BTN",
+            "color": "success"
+          }
+        ]
+      ]
+    },
+    "BOTTOM_KEYBOARD": {
+      "title": "Главное меню",
+      "type": "reply",
+      "rows": [
+        [
+          {
+            "button": "FIND_BTN",
+            "color": "primary"
+          },
+          {
+            "button": "DATING_BTN",
+            "color": "primary"
+          }
+        ],
+        [
+          {
+            "button": "PREMIUM_STATUS_BTN",
+            "color": "success"
+          }
+        ]
+      ]
+    },
+    "DATING_KEYBOARD": {
+      "title": "Чат знакомств",
+      "type": "reply",
+      "rows": [
+        [
+          {
+            "button": "DATING_FIND_BTN",
+            "color": "primary"
+          },
+          {
+            "button": "DATING_ROOMS_BTN",
+            "color": "primary"
+          }
+        ],
+        [
+          {
+            "button": "DATING_SETTINGS_BTN",
+            "color": "primary"
+          },
+          {
+            "button": "MAIN_MENU_BTN",
+            "color": "secondary"
+          }
+        ]
+      ]
+    },
+    "CHAT_KEYBOARD": {
+      "title": "Диалог",
+      "type": "inline",
+      "rows": [
+        [
+          {
+            "button": "NEW_PARTNER_BTN",
+            "color": "primary"
+          }
+        ],
+        [
+          {
+            "button": "PREMIUM_BTN",
+            "color": "success"
+          }
+        ],
+        [
+          {
+            "button": "STOP_BTN",
+            "color": "secondary"
+          }
+        ]
+      ]
+    },
+    "PARTNER_LEFT_KEYBOARD": {
+      "title": "Собеседник ушёл",
+      "type": "inline",
+      "rows": [
+        [
+          {
+            "button": "NEW_PARTNER_BTN",
+            "color": "primary"
+          }
+        ],
+        [
+          {
+            "button": "REPORT_BTN",
+            "color": "secondary"
+          }
+        ]
+      ]
+    },
+    "ROOMS_KEYBOARD": {
+      "title": "Выбор города",
+      "type": "inline",
+      "rows": [
+        [
+          {
+            "list": "ROOMS",
+            "item": "msk"
+          },
+          {
+            "list": "ROOMS",
+            "item": "spb"
+          }
+        ],
+        [
+          {
+            "list": "ROOMS",
+            "item": "nsk"
+          },
+          {
+            "list": "ROOMS",
+            "item": "ekb"
+          }
+        ],
+        [
+          {
+            "list": "ROOMS",
+            "item": "kzn"
+          },
+          {
+            "list": "ROOMS",
+            "item": "nnov"
+          }
+        ],
+        [
+          {
+            "list": "ROOMS",
+            "item": "any"
+          }
+        ]
+      ]
+    },
+    "SETTINGS_KEYBOARD": {
+      "title": "Пол собеседника",
+      "type": "inline",
+      "rows": [
+        [
+          {
+            "list": "GENDERS",
+            "item": "female",
+            "color": "primary"
+          },
+          {
+            "list": "GENDERS",
+            "item": "male",
+            "color": "primary"
+          }
+        ],
+        [
+          {
+            "list": "GENDERS",
+            "item": "any",
+            "color": "secondary"
+          }
+        ]
+      ]
+    },
+    "PREMIUM_KEYBOARD": {
+      "title": "Тарифы",
+      "type": "inline",
+      "rows": [
+        [
+          {
+            "list": "TARIFFS",
+            "item": "trial",
+            "color": "success"
+          }
+        ],
+        [
+          {
+            "list": "TARIFFS",
+            "item": "week",
+            "color": "success"
+          }
+        ],
+        [
+          {
+            "list": "TARIFFS",
+            "item": "month",
+            "color": "success"
+          }
+        ],
+        [
+          {
+            "list": "TARIFFS",
+            "item": "year",
+            "color": "success"
+          }
+        ]
+      ]
+    }
+  },
+  "images": {
+    "greeting": {
+      "title": "Баннер приветствия",
+      "file": "images/greeting.jpg"
+    },
+    "premium": {
+      "title": "Картинка премиума",
+      "file": "images/premium.png"
+    }
+  },
+  "screens": [
+    {
+      "id": "greeting",
+      "title": "Приветствие",
+      "when": "Первое сообщение в сообщество",
+      "image": "greeting",
+      "text": "COMMUNITY_GREETING",
+      "keyboard": "MAIN_KEYBOARD"
+    },
+    {
+      "id": "menu",
+      "title": "Главное меню",
+      "when": "Кнопка «Главное меню»",
+      "text": "MENU_TEXT",
+      "keyboard": "BOTTOM_KEYBOARD"
+    },
+    {
+      "id": "searching",
+      "title": "Поиск собеседника",
+      "when": "Кнопка «Найти собеседника»",
+      "text": "SEARCHING_TEXT",
+      "keyboard": "BOTTOM_KEYBOARD"
+    },
+    {
+      "id": "found",
+      "title": "Собеседник найден",
+      "text": "FOUND_TEXT",
+      "keyboard": "CHAT_KEYBOARD"
+    },
+    {
+      "id": "no_partners",
+      "title": "Нет собеседников",
+      "text": "NO_PARTNERS_TEXT",
+      "keyboard": "MAIN_KEYBOARD"
+    },
+    {
+      "id": "partner_left",
+      "title": "Собеседник ушёл",
+      "text": "PARTNER_LEFT_TEXT",
+      "keyboard": "PARTNER_LEFT_KEYBOARD"
+    },
+    {
+      "id": "report_sent",
+      "title": "Жалоба отправлена",
+      "text": "REPORT_SENT_TEXT",
+      "keyboard": "PARTNER_LEFT_KEYBOARD"
+    },
+    {
+      "id": "stopped",
+      "title": "Диалог остановлен",
+      "when": "Кнопка «Остановить диалог»",
+      "text": "STOPPED_TEXT",
+      "keyboard": "MAIN_KEYBOARD"
+    },
+    {
+      "id": "undelivered",
+      "title": "Собеседник недоступен",
+      "text": "UNDELIVERED_TEXT"
+    },
+    {
+      "id": "dating",
+      "title": "Чат знакомств",
+      "when": "Кнопка «Чат знакомств»",
+      "text": "DATING_TEXT",
+      "keyboard": "DATING_KEYBOARD"
+    },
+    {
+      "id": "rooms",
+      "title": "Выбор города",
+      "when": "Кнопка «Выбрать город»",
+      "text": "ROOMS_TEXT",
+      "keyboard": "ROOMS_KEYBOARD"
+    },
+    {
+      "id": "settings",
+      "title": "Настройка поиска",
+      "when": "Кнопка «Настроить поиск»",
+      "text": "SETTINGS_TEXT",
+      "keyboard": "SETTINGS_KEYBOARD"
+    },
+    {
+      "id": "age",
+      "title": "Возраст собеседника",
+      "text": "AGE_TEXT",
+      "keyboard": "DATING_KEYBOARD"
+    },
+    {
+      "id": "premium",
+      "title": "Премиум",
+      "when": "Кнопка «Премиум статус»",
+      "image": "premium",
+      "text": "PREMIUM_STATUS_TEXT",
+      "keyboard": "PREMIUM_KEYBOARD"
+    },
+    {
+      "id": "media_premium",
+      "title": "Медиа только с премиумом",
+      "text": "MEDIA_PREMIUM_TEXT",
+      "keyboard": "PREMIUM_KEYBOARD"
+    },
+    {
+      "id": "partner_no_premium",
+      "title": "Собеседник без премиума",
+      "text": "PARTNER_NO_PREMIUM_TEXT"
+    },
+    {
+      "id": "service_down",
+      "title": "Сервис недоступен",
+      "text": "SERVICE_DOWN_TEXT",
+      "keyboard": "MAIN_KEYBOARD"
+    }
+  ]
+}

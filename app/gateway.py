@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 import httpx
 
 from app.peer import Peer
 from app.premium import PremiumOffer, premium_offer
+from app.content import image_path
 from app.ui import (
     COMMUNITY_GREETING,
     MEDIA_PREMIUM_TEXT,
@@ -29,9 +29,9 @@ from app.ui import (
     premium_active_text,
 )
 
-_ASSETS = Path(__file__).resolve().parent / "assets"
-_GREETING_PHOTO = _ASSETS / "greeting.jpg"
-_PREMIUM_PHOTO = _ASSETS / "premium.png"
+# Картинки — в content.json (раздел images), файлы в app/content/images.
+_GREETING_PHOTO = image_path("greeting")
+_PREMIUM_PHOTO = image_path("premium")
 _greeting_photo_bytes: bytes | None = None
 _premium_photo_bytes: bytes | None = None
 

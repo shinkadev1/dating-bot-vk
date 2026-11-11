@@ -5,24 +5,25 @@ import unittest
 from unittest.mock import AsyncMock, MagicMock
 
 from app.handlers import choose_room
-from app.ui import DEFAULT_ROOM, build_dating_keyboard, build_rooms_keyboard
+from app.ui import DATING_ROOMS_BTN, DEFAULT_ROOM, ROOM_ROWS, ROOMS, build_dating_keyboard, build_rooms_keyboard
 
-CITIES = ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Любой город"]
+# Названия городов и раскладка — в app/content/content.json (lists.ROOMS, keyboards.ROOMS_KEYBOARD).
+CITIES = [ROOMS[k] for row in ROOM_ROWS for k in row]
 
 
 class ChooseCityTest(unittest.TestCase):
     def test_dating_keyboard_has_city_button(self):
-        action = json.loads(build_dating_keyboard())["buttons"][0][1]["action"]
-        self.assertEqual(action["label"], "📍 Выбрать город")
-        self.assertEqual(json.loads(action["payload"]), {"command": "dating_rooms"})
+        rows = json.loads(build_dating_keyboard())["buttons"]
+        actions = {json.loads(b["action"]["payload"])["command"]: b["action"] for r in rows for b in r}
+        self.assertEqual(actions["dating_rooms"]["label"], DATING_ROOMS_BTN)
 
     def test_cities_keyboard(self):
         self.assertEqual(DEFAULT_ROOM, "spb")
         rows = json.loads(build_rooms_keyboard("msk"))["buttons"]
-        self.assertEqual([len(r) for r in rows], [2, 2, 2, 1])
+        self.assertEqual([len(r) for r in rows], [len(r) for r in ROOM_ROWS])
         labels = [b["action"]["label"] for r in rows for b in r]
         self.assertEqual([l.replace(" ✅", "") for l in labels], CITIES)
-        self.assertEqual(labels[0], "Москва ✅")
+        self.assertIn(ROOMS["msk"] + " ✅", labels)
         self.assertTrue(all(len(l) <= 40 for l in labels))
         payloads = [json.loads(b["action"]["payload"]) for r in rows for b in r]
         self.assertTrue(all(p["command"] == "room" for p in payloads))
@@ -38,7 +39,7 @@ class StaleRoomButtonTest(unittest.IsolatedAsyncioTestCase):
         await choose_room(event, "main")
         keyboard = json.loads(event.edit_message.call_args.kwargs["keyboard"])
         labels = [b["action"]["label"] for r in keyboard["buttons"] for b in r]
-        self.assertIn("Санкт-Петербург ✅", labels)
+        self.assertIn(ROOMS["spb"] + " ✅", labels)
         event.show_snackbar.assert_awaited_once()
 
 
