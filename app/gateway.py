@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 import httpx
 
+from app import flow
 from app.peer import Peer
 from app.premium import PremiumOffer, premium_offer
 from app.ui import (
@@ -24,16 +24,14 @@ from app.ui import (
     build_partner_left_keyboard,
     build_premium_keyboard,
     build_rooms_keyboard,
+    build_keyboard,
     build_settings_keyboard,
     new_random_id,
     premium_active_text,
+    uses_premium_link,
 )
 
-_ASSETS = Path(__file__).resolve().parent / "assets"
-_GREETING_PHOTO = _ASSETS / "greeting.jpg"
-_PREMIUM_PHOTO = _ASSETS / "premium.png"
-_greeting_photo_bytes: bytes | None = None
-_premium_photo_bytes: bytes | None = None
+_CONTENT_TYPES = {".jpg": "image/jpeg", ".png": "image/png"}
 
 
 async def vk_keyboard(kind: str, peer: Peer) -> str | None:
@@ -55,20 +53,29 @@ async def vk_keyboard(kind: str, peer: Peer) -> str | None:
     return build_main_keyboard()
 
 
-def _greeting_photo() -> bytes:
-    """Баннер приветствия. Файл читается один раз."""
-    global _greeting_photo_bytes
-    if _greeting_photo_bytes is None:
-        _greeting_photo_bytes = _GREETING_PHOTO.read_bytes()
-    return _greeting_photo_bytes
+def _screen_image(screen_id: str) -> tuple[bytes, str] | None:
+    """Картинка экрана из flow/images и её MIME. Файл читается один раз; нет картинки — None."""
+    current = flow.get()
+    data = current.image(screen_id)
+    name = current.screen(screen_id).image
+    if data is None or name is None:
+        return None
+    return data, _CONTENT_TYPES.get(name[name.rfind("."):].lower(), "application/octet-stream")
 
 
-def _premium_photo() -> bytes:
-    """Картинка акции для премиума. Файл читается один раз."""
-    global _premium_photo_bytes
-    if _premium_photo_bytes is None:
-        _premium_photo_bytes = _PREMIUM_PHOTO.read_bytes()
-    return _premium_photo_bytes
+async def _screen_attachment(api: Any, peer_id: int, screen_id: str) -> str | None:
+    """Загружает картинку экрана в ВК. Сбой загрузки не мешает тексту: возвращает None."""
+    image = _screen_image(screen_id)
+    if image is None:
+        return None
+    try:
+        return await _vk_attachment(api, peer_id, "photo", image[1], image[0])
+    except Exception as exc:  # noqa: BLE001 — текст важнее картинки
+        print(
+            f"Не загрузил картинку экрана {screen_id} peer={peer_id}: {type(exc).__name__}: {exc}",
+            flush=True,
+        )
+        return None
 
 
 async def _send_plain(
@@ -106,14 +113,7 @@ async def send_vk(
 
 async def send_vk_greeting(api: Any, peer_id: int) -> None:
     """Приветствие с баннером и inline-кнопкой «Начать» одним сообщением."""
-    attachment = None
-    try:
-        attachment = await _vk_attachment(api, peer_id, "photo", "image/jpeg", _greeting_photo())
-    except Exception as exc:  # noqa: BLE001 — приветствие важнее баннера
-        print(
-            f"Не загрузил баннер приветствия peer={peer_id}: {type(exc).__name__}: {exc}",
-            flush=True,
-        )
+    attachment = await _screen_attachment(api, peer_id, "start_inline")
     await send_vk(api, peer_id, COMMUNITY_GREETING, build_main_keyboard(), attachment)
 
 
@@ -128,14 +128,7 @@ async def send_vk_premium(api: Any, peer: Peer, offer: PremiumOffer | None = Non
     if offer.active:
         await send_vk(api, peer_id, premium_active_text(offer), build_premium_keyboard(offer))
         return
-    attachment = None
-    try:
-        attachment = await _vk_attachment(api, peer_id, "photo", "image/png", _premium_photo())
-    except Exception as exc:  # noqa: BLE001 — текст важнее картинки
-        print(
-            f"Не загрузил картинку премиума peer={peer_id}: {type(exc).__name__}: {exc}",
-            flush=True,
-        )
+    attachment = await _screen_attachment(api, peer_id, "premium")
     await send_vk(api, peer_id, PREMIUM_STATUS_TEXT, build_premium_keyboard(offer), attachment)
 
 
@@ -175,6 +168,31 @@ class Gateway:
         except Exception as exc:  # noqa: BLE001
             print(
                 f"Не удалось отправить приветствие vk:{peer.bot_key}:{peer.user_id}: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return False
+
+    async def send_screen(self, peer: Peer, screen_id: str) -> bool:
+        """Экран из flow целиком: картинка, текст и клавиатура из его описания.
+
+        Для экранов без handler (переходы goto и цепочка next). Экран без текста и картинки пропускается.
+        """
+        screen = flow.get().screen(screen_id)
+        if not screen.text and not screen.image:
+            print(f"Экран {screen_id} без текста и картинки, пропускаю", flush=True)
+            return False
+        try:
+            api = self._apis.get(peer.bot_key)
+            if api is None:
+                raise RuntimeError(f"Нет сообщества ВК {peer.bot_key}")
+            offer = await premium_offer(peer) if uses_premium_link(screen_id) else None
+            attachment = await _screen_attachment(api, peer.user_id, screen_id)
+            await send_vk(api, peer.user_id, screen.text or "", build_keyboard(screen_id, offer=offer), attachment)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не удалось отправить экран {screen_id} vk:{peer.bot_key}:{peer.user_id}: "
                 f"{type(exc).__name__}: {exc}",
                 flush=True,
             )

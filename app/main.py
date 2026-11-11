@@ -11,13 +11,20 @@ from vkbottle import GroupEventType
 from vkbottle.bot import Bot, MessageEvent
 from vkbottle.http.aiohttp import AiohttpClient
 
+from app import flow
 from app.api_client import ChatApiError, chat_api
 from app.config import CHAT_API_SERVICE_TOKEN, CHAT_API_URL, DEV_MODE, vk_tokens
-from app.events import consume_broadcasts, consume_events
+from app.events import EVENTS, consume_broadcasts, consume_events
 from app.gateway import gateway
-from app.handlers import answer_waiting, attach_start_buttons, vk_handler, vk_start_handler
+from app.handlers import ACTIONS, HANDLERS, answer_waiting, attach_start_buttons, vk_handler, vk_start_handler
 from app.longpoll import VersionedBotPolling
 from app.startup import preflight_check, rebuild_vkbottle_response_models
+
+# Карта читается и сверяется с кодом до запуска Long Poll: битый flow.yaml или расхождение
+# с реестрами ACTIONS/HANDLERS/EVENTS — FlowError, бот не стартует.
+_FLOW = flow.get()
+_FLOW.check_registries(actions=ACTIONS, handlers=HANDLERS, events=EVENTS)
+print(f"flow загружен: {len(_FLOW.screens)} экранов, {len(_FLOW.texts)} текстов", flush=True)
 
 
 def community_bot(token: str) -> Bot:

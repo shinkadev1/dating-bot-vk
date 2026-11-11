@@ -1,4 +1,8 @@
-"""Тексты, подписи кнопок и клавиатуры сообщений."""
+"""Тексты, подписи кнопок и клавиатуры сообщений ВК.
+
+Содержимое живёт в flow/flow.yaml; здесь оно только собирается в клавиатуры vkbottle.
+Публичные имена (MENU_TEXT, FIND_BTN, ROOMS, build_* …) сохранены для остального кода.
+"""
 
 from __future__ import annotations
 
@@ -9,100 +13,110 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from vkbottle import Callback, Keyboard, KeyboardButtonColor, OpenLink, Text
 
+from app import flow
+from app.flow import Button, Screen
+
 if TYPE_CHECKING:
     from app.premium import PremiumOffer
 
-MENU_TEXT = "Найди собеседника прямо сейчас"
-COMMUNITY_GREETING = (
-    "👋 Привет! Это чат для анонимных знакомств, флирта и легкого общения\n"
-    "Найди собеседника прямо сейчас. Нажми кнопку начать"
-)
-START_BTN = "Начать"
 
-FIND_BTN = "🔍 Найти собеседника"
-DATING_BTN = "💘 Чат знакомств"
-PREMIUM_STATUS_BTN = "👑 Премиум статус"
+def _screen(screen_id: str) -> Screen:
+    return flow.get().screen(screen_id)
 
-DATING_FIND_BTN = "🔥 Пошлый чат"
-DATING_ROOMS_BTN = "📍 Выбрать город"
-DATING_SETTINGS_BTN = "⚙️ Настроить поиск"
-MAIN_MENU_BTN = "◀️ Главное меню"
 
-CHAT_BTN_NEXT = "➡️ Следующий собеседник"
-CHAT_BTN_STOP = "🛑 Закончить диалог"
-NEW_PARTNER_BTN = "🔍 Новый собеседник"
-PREMIUM_BTN = "💎 Купить премиум"
-STOP_BTN = "Остановить диалог"
-REPORT_BTN = "🚫 Пожаловаться"
+def _text(key: str, **fmt: object) -> str:
+    return flow.get().text(key, **fmt)
 
-SEARCHING_TEXT = "🔎 Ищем собеседника..."
-NO_PARTNERS_TEXT = "Сейчас собеседников нет, приходите чуть позже 😔"
-FOUND_TEXT = "Комната 💬 найдена. Общайтесь!"
-STOPPED_TEXT = f"{MENU_TEXT}\n\nДиалог остановлен. Нажми «Начать», чтобы начать снова."
-PARTNER_LEFT_TEXT = (
-    "Собеседник закончил диалог 😔\n\n"
-    "Пожалуйста, нажмите Пожаловаться, если встретили спам."
-)
-REPORT_SENT_TEXT = "Жалоба отправлена. Спасибо, что сообщили."
-UNDELIVERED_TEXT = "❌ Собеседник недоступен, диалог закончен.\nНажми «Начать», чтобы найти нового собеседника."
-SERVICE_DOWN_TEXT = "Сервис временно недоступен. Попробуй через минуту."
+
+def _screen_text(screen_id: str) -> str:
+    return _screen(screen_id).text or ""
+
+
+def _flow_button(screen_id: str, action: str) -> Button:
+    """Кнопка экрана по её действию."""
+    for row in _screen(screen_id).buttons:
+        for button in row:
+            if button.action == action:
+                return button
+    raise flow.FlowError(f"screens.{screen_id}: нет кнопки с action {action!r}")
+
+
+def _link_button(screen_id: str) -> Button:
+    """Первая кнопка-ссылка экрана (личная ссылка оплаты)."""
+    for row in _screen(screen_id).buttons:
+        for button in row:
+            if button.url is not None:
+                return button
+    raise flow.FlowError(f"screens.{screen_id}: нет кнопки-ссылки")
+
+
+MENU_TEXT = _screen_text("main")
+COMMUNITY_GREETING = _screen_text("start_inline")
+START_BTN = _flow_button("start_inline", "start").text
+
+FIND_BTN = _flow_button("main", "start").text
+DATING_BTN = _flow_button("main", "dating").text
+PREMIUM_STATUS_BTN = _flow_button("main", "premium").text
+
+DATING_FIND_BTN = _flow_button("dating", "dating_find").text
+DATING_ROOMS_BTN = _flow_button("dating", "dating_rooms").text
+DATING_SETTINGS_BTN = _flow_button("dating", "dating_settings").text
+MAIN_MENU_BTN = _flow_button("dating", "main").text
+
+# Кнопки прежней нижней клавиатуры диалога: бот их больше не показывает, но принимает их текст.
+CHAT_BTN_NEXT = _flow_button("legacy_keys", "next").text
+CHAT_BTN_STOP = _flow_button("legacy_keys", "stop").text
+NEW_PARTNER_BTN = _flow_button("chat", "start").text
+PREMIUM_BTN = _link_button("chat").text
+STOP_BTN = _flow_button("chat", "stop").text
+REPORT_BTN = _flow_button("partner_left", "report").text
+
+SEARCHING_TEXT = _text("searching")
+NO_PARTNERS_TEXT = _text("no_partners")
+FOUND_TEXT = _screen_text("chat")
+STOPPED_TEXT = _text("stopped")
+PARTNER_LEFT_TEXT = _screen_text("partner_left")
+REPORT_SENT_TEXT = _text("report_sent")
+UNDELIVERED_TEXT = _screen_text("undelivered")
+SERVICE_DOWN_TEXT = _text("service_down")
 # Ссылка на оплату уходит только кнопкой OpenLink: из текста ВК соберёт сниппет и сам откроет её.
-MEDIA_PREMIUM_TEXT = "Чтобы отправлять медиа, получите премиум 👇"
-PARTNER_NO_PREMIUM_TEXT = "Собеседник без премиума не может получать фото, видео и аудио"
+MEDIA_PREMIUM_TEXT = _text("media_premium")
+PARTNER_NO_PREMIUM_TEXT = _text("partner_no_premium")
 # Запасная ссылка, если Chat API не выдал личную.
-PREMIUM_URL = "https://pay.chatwithyou.site/"
+PREMIUM_URL = _text("premium_url")
 # Тарифы оплаты: (plan, подпись кнопки). Страница оплаты по ссылке с plan сразу открывает заказ.
-TARIFFS: tuple[tuple[str, str], ...] = (
-    ("trial", "🎁 Пробный 3 дня — 1 ₽"),
-    ("week", "Неделя — 299 ₽"),
-    ("month", "Месяц — 999 ₽"),
-    ("year", "Год — 2999 ₽"),
+TARIFFS: tuple[tuple[str, str], ...] = tuple(
+    (button.plan, button.text) for row in _screen("premium").buttons for button in row if button.plan
 )
-# Продление при активном премиуме — без пробного.
-RENEW_PLANS = ("week", "month", "year")
-PREMIUM_ACTIVE_TEXT = "👑 Премиум активен"
-PREMIUM_STATUS_TEXT = (
-    "⚡ Временная акция, скидка 99%:\n\n"
-    "🍓 Настройка поиска: например, только девушки младше 25 лет\n"
-    "💋 Комнаты для общения по тематике: флирт, знакомства\n"
-    "📹 Отправка и получение любых фото, видео и голосовых без ограничений\n"
-    "🔝 Первое место в поиске\n"
-    "🚫 Никакой рекламы"
-)
-DATING_TEXT = "👑 Для продолжения нужен Премиум"
+# Пробный тариф не показывается тому, у кого премиум уже активен: ему остаётся продление.
+_TRIAL_PLAN = "trial"
+RENEW_PLANS = tuple(plan for plan, _label in TARIFFS if plan != _TRIAL_PLAN)
+PREMIUM_ACTIVE_TEXT = _text("premium_active")
+PREMIUM_STATUS_TEXT = _screen_text("premium")
+DATING_TEXT = _screen_text("dating")
 # Раньше здесь были комнаты; имена ROOMS/room оставлены, теперь это города.
-ROOMS_TEXT = "📍 Выберите город, в котором хотите искать собеседников:"
-ROOMS: dict[str, str] = {
-    "msk": "Москва",
-    "spb": "Санкт-Петербург",
-    "nsk": "Новосибирск",
-    "ekb": "Екатеринбург",
-    "kzn": "Казань",
-    "nnov": "Нижний Новгород",
-    "any": "Любой город",
+ROOMS_TEXT = _screen_text("rooms")
+ROOMS: dict[str, str] = dict(_screen("rooms").options.items)
+ROOM_ROWS = _screen("rooms").options.rows
+DEFAULT_ROOM = _screen("rooms").options.default
+SETTINGS_TEXT = _screen_text("settings")
+GENDERS: dict[str, str] = dict(_screen("settings").options.items)
+AGE_TEXT = _screen_text("age")
+
+# Цвета кнопок ВК. Кнопка без style получает серый: цвет всегда задаётся явно.
+_COLORS = {
+    "primary": KeyboardButtonColor.PRIMARY,
+    "secondary": KeyboardButtonColor.SECONDARY,
+    "success": KeyboardButtonColor.POSITIVE,
+    "danger": KeyboardButtonColor.NEGATIVE,
 }
-ROOM_ROWS = (("msk", "spb"), ("nsk", "ekb"), ("kzn", "nnov"), ("any",))
-DEFAULT_ROOM = "spb"
-SETTINGS_TEXT = (
-    "💎 Только для Премиум-пользователей\n\n"
-    "👱‍♀️👱 Пожалуйста, выберите желаемый пол собеседника:\n\n"
-    "🔍 Бот будет искать собеседников только с заданными параметрами поиска"
-)
-GENDERS: dict[str, str] = {
-    "female": "👱‍♀️ Женский",
-    "male": "👱‍♂️ Мужской",
-    "any": "Не важно",
-}
-AGE_TEXT = (
-    "✏️ Введите желаемый возраст собеседника\n\n"
-    "ℹ️ Вы можете настроить поиск \"от 26\" введя \"26+\", "
-    "или указать диапазон поиска, например, \"24-34\""
-)
+# Команда кнопки с текущим сроком премиума (action premium из реестра handlers.ACTIONS).
+_PREMIUM_COMMAND = "premium"
 
 
 def format_partner(text: str) -> str:
     """Оформляет реплику так, будто её прислал собеседник."""
-    return f"👤 Собеседник:\n{text}"
+    return _text("partner_message", text=text)
 
 
 def new_random_id() -> int:
@@ -110,76 +124,11 @@ def new_random_id() -> int:
     return random.randint(1, 2_147_483_647)
 
 
-def build_main_keyboard() -> str:
-    """Кнопка «Начать» под текстом. В беседе обычная клавиатура не показывается."""
-    keyboard = Keyboard(inline=True).add(
-        Callback(START_BTN, payload=json.dumps({"command": "start"})),
-        color=KeyboardButtonColor.POSITIVE,
-    )
-    return keyboard.get_json()
-
-
-def build_bottom_keyboard() -> str:
-    """Нижняя клавиатура лички: поиск собеседника, чат знакомств и премиум."""
-    keyboard = (
-        Keyboard(one_time=False, inline=False)
-        .add(
-            Text(FIND_BTN, payload=json.dumps({"command": "start"})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-        .add(
-            Text(DATING_BTN, payload=json.dumps({"command": "dating"})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-        .row()
-        .add(
-            Text(PREMIUM_STATUS_BTN, payload=json.dumps({"command": "premium"})),
-            color=KeyboardButtonColor.POSITIVE,
-        )
-    )
-    return keyboard.get_json()
-
-
-def build_dating_keyboard() -> str:
-    """Нижняя клавиатура раздела «Чат знакомств»: поиск, комнаты, настройки и выход в меню."""
-    keyboard = (
-        Keyboard(one_time=False, inline=False)
-        .add(
-            Text(DATING_FIND_BTN, payload=json.dumps({"command": "dating_find"})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-        .add(
-            Text(DATING_ROOMS_BTN, payload=json.dumps({"command": "dating_rooms"})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-        .row()
-        .add(
-            Text(DATING_SETTINGS_BTN, payload=json.dumps({"command": "dating_settings"})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-        .add(
-            Text(MAIN_MENU_BTN, payload=json.dumps({"command": "main"})),
-            color=KeyboardButtonColor.SECONDARY,
-        )
-    )
-    return keyboard.get_json()
-
-
 def premium_active_text(offer: PremiumOffer) -> str:
     """«Премиум активен до ДД.ММ.ГГГГ»; без срока — просто «Премиум активен»."""
     if not offer.until_text:
         return PREMIUM_ACTIVE_TEXT
-    return f"{PREMIUM_ACTIVE_TEXT} до {offer.until_text}"
-
-
-def _add_premium_button(keyboard: Keyboard, offer: PremiumOffer) -> Keyboard:
-    """Кнопка личной ссылки на оплату или, если премиум уже есть, кнопка с его сроком."""
-    if offer.active:
-        return keyboard.add(
-            Callback(premium_active_text(offer), payload=json.dumps({"command": "premium"})),
-            color=KeyboardButtonColor.POSITIVE,
-        )
-    return keyboard.add(OpenLink(offer.url, PREMIUM_BTN), color=KeyboardButtonColor.POSITIVE)
+    return _text("premium_active_until", date=offer.until_text)
 
 
 def plan_url(url: str, plan: str) -> str:
@@ -190,85 +139,116 @@ def plan_url(url: str, plan: str) -> str:
     return urlunsplit(parts._replace(query=urlencode(query)))
 
 
-def build_premium_keyboard(offer: PremiumOffer) -> str:
-    """Inline-кнопки тарифов, по одной в ряду. Активному премиуму — только продление без пробного."""
-    plans = [item for item in TARIFFS if not offer.active or item[0] in RENEW_PLANS]
-    keyboard = Keyboard(inline=True)
-    for index, (plan, label) in enumerate(plans):
+def _color(style: str | None) -> KeyboardButtonColor:
+    return _COLORS.get(style or "secondary", KeyboardButtonColor.SECONDARY)
+
+
+def _assemble(rows: list[list[tuple[Text | Callback | OpenLink, KeyboardButtonColor]]], *, inline: bool) -> str:
+    """JSON клавиатуры из рядов (кнопка, цвет)."""
+    keyboard = Keyboard(inline=True) if inline else Keyboard(one_time=False, inline=False)
+    for index, row in enumerate(rows):
         if index:
             keyboard.row()
-        keyboard.add(OpenLink(plan_url(offer.url, plan), label), color=KeyboardButtonColor.POSITIVE)
+        for button, color in row:
+            keyboard.add(button, color=color)
     return keyboard.get_json()
+
+
+def _vk_button(button: Button, *, inline: bool, offer: PremiumOffer | None) -> tuple[Text | Callback | OpenLink, KeyboardButtonColor] | None:
+    """Кнопка flow в кнопку ВК. None — в этот раз кнопку не показываем (пробный тариф при активном премиуме)."""
+    color = _color(button.style)
+    if button.url is not None:
+        if offer is not None and offer.active:
+            if button.plan == _TRIAL_PLAN:
+                return None
+            if not button.plan:
+                payload = json.dumps({"command": _PREMIUM_COMMAND})
+                return Callback(premium_active_text(offer), payload=payload), color
+        link = offer.url if offer is not None else PREMIUM_URL
+        url = button.url.replace("{premium_url}", link)
+        if button.plan:
+            url = plan_url(url, button.plan)
+        return OpenLink(url, button.text), color
+    cls = Callback if inline else Text
+    return cls(button.text, payload=button.payload_json()), color
+
+
+def build_keyboard(screen_id: str, *, offer: PremiumOffer | None = None) -> str | None:
+    """Клавиатура экрана из его кнопок. Нет кнопок — None: сообщение уходит без клавиатуры.
+
+    offer нужен кнопкам-ссылкам: личная ссылка вместо {premium_url}; при активном премиуме
+    пробный тариф пропускается, а кнопка без тарифа показывает срок премиума.
+    """
+    screen = _screen(screen_id)
+    if screen.options is not None:
+        return build_options(screen_id, screen.options.default or "")
+    rows = []
+    for row in screen.buttons:
+        cells = [cell for cell in (_vk_button(b, inline=screen.kind == "inline", offer=offer) for b in row) if cell]
+        if cells:
+            rows.append(cells)
+    if not rows:
+        return None
+    return _assemble(rows, inline=screen.kind == "inline")
+
+
+def build_options(screen_id: str, selected: str) -> str:
+    """Inline-выбор из options экрана: выбранный вариант отмечен selected_mark."""
+    options = _screen(screen_id).options
+    mark = f" {options.selected_mark}" if options.selected_mark else ""
+    rows = [
+        [
+            (
+                Callback(options.items[key] + (mark if key == selected else ""), payload=options.data(key)),
+                _color(options.styles.get(key)),
+            )
+            for key in row
+        ]
+        for row in options.rows
+    ]
+    return _assemble(rows, inline=True)
+
+
+def uses_premium_link(screen_id: str) -> bool:
+    """Есть ли у экрана кнопки с личной ссылкой оплаты."""
+    return any(b.url is not None and "{premium_url}" in b.url for row in _screen(screen_id).buttons for b in row)
+
+
+def build_main_keyboard() -> str:
+    """Кнопка «Начать» под текстом. В беседе обычная клавиатура не показывается."""
+    return build_keyboard("start_inline")
+
+
+def build_bottom_keyboard() -> str:
+    """Нижняя клавиатура лички: поиск собеседника, чат знакомств и премиум."""
+    return build_keyboard("main")
+
+
+def build_dating_keyboard() -> str:
+    """Нижняя клавиатура раздела «Чат знакомств»: поиск, комнаты, настройки и выход в меню."""
+    return build_keyboard("dating")
+
+
+def build_premium_keyboard(offer: PremiumOffer) -> str:
+    """Inline-кнопки тарифов, по одной в ряду. Активному премиуму — только продление без пробного."""
+    return build_keyboard("premium", offer=offer)
 
 
 def build_rooms_keyboard(selected: str) -> str:
     """Inline-выбор города: выбранный отмечен галочкой."""
-    keyboard = Keyboard(inline=True)
-    for index, row in enumerate(ROOM_ROWS):
-        for key in row:
-            label = ROOMS[key]
-            if key == selected:
-                label = f"{label} ✅"
-            keyboard.add(
-                Callback(label, payload=json.dumps({"command": "room", "room": key})),
-                color=KeyboardButtonColor.SECONDARY,
-            )
-        if index < len(ROOM_ROWS) - 1:
-            keyboard.row()
-    return keyboard.get_json()
+    return build_options("rooms", selected)
 
 
 def build_settings_keyboard(selected: str) -> str:
     """Inline-выбор пола собеседника: выбранный вариант отмечен галочкой."""
-    keyboard = Keyboard(inline=True)
-    for key in ("female", "male"):
-        label = GENDERS[key] + (" ✅" if key == selected else "")
-        keyboard.add(
-            Callback(label, payload=json.dumps({"command": "gender", "value": key})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-    keyboard.row()
-    label = GENDERS["any"] + (" ✅" if selected == "any" else "")
-    keyboard.add(
-        Callback(label, payload=json.dumps({"command": "gender", "value": "any"})),
-        color=KeyboardButtonColor.SECONDARY,
-    )
-    return keyboard.get_json()
+    return build_options("settings", selected)
 
 
 def build_chat_keyboard(offer: PremiumOffer) -> str:
     """Под текстом «комната найдена»: «Новый собеседник», премиум и «Остановить диалог»."""
-    keyboard = (
-        Keyboard(inline=True)
-        .add(
-            Callback(NEW_PARTNER_BTN, payload=json.dumps({"command": "start"})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-        .row()
-    )
-    keyboard = (
-        _add_premium_button(keyboard, offer)
-        .row()
-        .add(
-            Callback(STOP_BTN, payload=json.dumps({"command": "stop"})),
-            color=KeyboardButtonColor.SECONDARY,
-        )
-    )
-    return keyboard.get_json()
+    return build_keyboard("chat", offer=offer)
 
 
 def build_partner_left_keyboard() -> str:
     """Под текстом об уходе: синяя «Новый собеседник» и серая «Пожаловаться»."""
-    keyboard = (
-        Keyboard(inline=True)
-        .add(
-            Callback(NEW_PARTNER_BTN, payload=json.dumps({"command": "start"})),
-            color=KeyboardButtonColor.PRIMARY,
-        )
-        .row()
-        .add(
-            Callback(REPORT_BTN, payload=json.dumps({"command": "report"})),
-            color=KeyboardButtonColor.SECONDARY,
-        )
-    )
-    return keyboard.get_json()
+    return build_keyboard("partner_left")

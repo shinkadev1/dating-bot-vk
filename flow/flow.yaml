@@ -1,0 +1,292 @@
+# Карта бота ВКонтакте: экраны, кнопки, переходы и тексты.
+# Формат описан в flow.schema.json (version 1) и читается CRM «Постдеск». Менять тексты и кнопки нужно здесь.
+# Новые action/handler/on сначала регистрируются в коде (handlers.ACTIONS / HANDLERS, events.EVENTS).
+# pos — положение узла на карте CRM; title — подпись узла.
+#
+# VK-особенности:
+# - keyboard: reply — нижняя клавиатура сообщества (кнопки «text»), inline — кнопки под сообщением (callback);
+#   url-кнопки только inline. Цвет кнопки задаёт style: primary — синий, secondary — серый,
+#   success — зелёный, danger — красный.
+# - payload кнопки по умолчанию {"command": "<action>"}, у goto — {"command": "go", "screen": "<экран>"}.
+# - Подпись кнопки до 40 символов, payload до 255.
+# - Нижние кнопки с action dating/dating_find/dating_rooms/dating_settings/main/premium работают по payload;
+#   текстом их набрать нельзя (текст уходит собеседнику). Текстом работают только start, report, stop, next.
+version: 1
+bot: vk
+start: start_inline
+
+screens:
+  start_inline:
+    title: "Приветствие и кнопка «Начать»"
+    text: |-
+      👋 Привет! Это чат для анонимных знакомств, флирта и легкого общения
+      Найди собеседника прямо сейчас. Нажми кнопку начать
+    image: "images/greeting.jpg"
+    keyboard: inline
+    buttons:
+      - - text: "Начать"
+          action: start
+          style: success
+          aliases: ["/start", "start"]
+          next: chat
+    pos:
+      x: 0
+      y: 0
+
+  main:
+    title: "Главное меню (нижняя клавиатура)"
+    text: "Найди собеседника прямо сейчас"
+    keyboard: reply
+    buttons:
+      - - text: "🔍 Найти собеседника"
+          action: start
+          style: primary
+          next: chat
+        - text: "💘 Чат знакомств"
+          action: dating
+          style: primary
+          next: dating
+      - - text: "👑 Премиум статус"
+          action: premium
+          style: success
+          next: premium
+    pos:
+      x: 0
+      y: 180
+
+  dating:
+    title: "Чат знакомств"
+    text: "👑 Для продолжения нужен Премиум"
+    keyboard: reply
+    buttons:
+      - - text: "🔥 Пошлый чат"
+          action: dating_find
+          style: primary
+          next: premium
+        - text: "📍 Выбрать город"
+          action: dating_rooms
+          style: primary
+          next: rooms
+      - - text: "⚙️ Настроить поиск"
+          action: dating_settings
+          style: primary
+          next: settings
+        - text: "◀️ Главное меню"
+          action: main
+          style: secondary
+          next: main
+    pos:
+      x: 320
+      y: 0
+
+  chat:
+    title: "Диалог с собеседником"
+    on: partner_found
+    text: "Комната 💬 найдена. Общайтесь!"
+    keyboard: inline
+    # Кнопка премиума: личная ссылка оплаты вместо {premium_url}; при активном премиуме код заменяет её
+    # кнопкой со сроком (тексты premium_active / premium_active_until).
+    buttons:
+      - - text: "🔍 Новый собеседник"
+          action: start
+          style: primary
+          next: chat
+      - - text: "💎 Купить премиум"
+          url: "{premium_url}"
+          style: success
+          next: premium
+      - - text: "Остановить диалог"
+          action: stop
+          style: secondary
+          next: start_inline
+    handler: chat_keyboard
+    pos:
+      x: 320
+      y: 180
+
+  partner_left:
+    title: "Собеседник закончил диалог"
+    on: partner_left
+    text: |-
+      Собеседник закончил диалог 😔
+
+      Пожалуйста, нажмите Пожаловаться, если встретили спам.
+    keyboard: inline
+    buttons:
+      - - text: "🔍 Новый собеседник"
+          action: start
+          style: primary
+          next: chat
+      - - text: "🚫 Пожаловаться"
+          action: report
+          style: secondary
+          aliases: ["Пожаловаться"]
+          next: chat
+    pos:
+      x: 0
+      y: 360
+
+  undelivered:
+    title: "Собеседник недоступен"
+    on: undeliverable
+    text: |-
+      ❌ Собеседник недоступен, диалог закончен.
+      Нажми «Начать», чтобы найти нового собеседника.
+    keyboard: inline
+    buttons_from: start_inline
+    pos:
+      x: 0
+      y: 540
+
+  premium:
+    title: "Премиум: тарифы"
+    text: |-
+      ⚡ Временная акция, скидка 99%:
+
+      🍓 Настройка поиска: например, только девушки младше 25 лет
+      💋 Комнаты для общения по тематике: флирт, знакомства
+      📹 Отправка и получение любых фото, видео и голосовых без ограничений
+      🔝 Первое место в поиске
+      🚫 Никакой рекламы
+    image: "images/premium.png"
+    keyboard: inline
+    # Ссылка оплаты личная, подставляется кодом вместо {premium_url}; ?plan= добавляется по полю plan.
+    # Тариф trial при активном премиуме не показывается (остальные — продление).
+    buttons:
+      - - text: "🎁 Пробный 3 дня — 1 ₽"
+          url: "{premium_url}"
+          style: success
+          plan: trial
+      - - text: "Неделя — 299 ₽"
+          url: "{premium_url}"
+          style: success
+          plan: week
+      - - text: "Месяц — 999 ₽"
+          url: "{premium_url}"
+          style: success
+          plan: month
+      - - text: "Год — 2999 ₽"
+          url: "{premium_url}"
+          style: success
+          plan: year
+    handler: premium_offer
+    pos:
+      x: 640
+      y: 0
+
+  rooms:
+    title: "Выбор города"
+    text: "📍 Выберите город, в котором хотите искать собеседников:"
+    keyboard: inline
+    handler: rooms
+    # callback в ВК — JSON payload кнопки; {key} заменяется ключом города.
+    options:
+      callback: '{"command": "room", "room": "{key}"}'
+      rows: [[msk, spb], [nsk, ekb], [kzn, nnov], [any]]
+      items:
+        msk: "Москва"
+        spb: "Санкт-Петербург"
+        nsk: "Новосибирск"
+        ekb: "Екатеринбург"
+        kzn: "Казань"
+        nnov: "Нижний Новгород"
+        any: "Любой город"
+      default: spb
+      selected_mark: "✅"
+      styles:
+        msk: secondary
+        spb: secondary
+        nsk: secondary
+        ekb: secondary
+        kzn: secondary
+        nnov: secondary
+        any: secondary
+    pos:
+      x: 640
+      y: 180
+
+  settings:
+    title: "Настройка поиска: пол"
+    text: |-
+      💎 Только для Премиум-пользователей
+
+      👱‍♀️👱 Пожалуйста, выберите желаемый пол собеседника:
+
+      🔍 Бот будет искать собеседников только с заданными параметрами поиска
+    keyboard: inline
+    next: age
+    handler: settings
+    options:
+      callback: '{"command": "gender", "value": "{key}"}'
+      rows: [[female, male], [any]]
+      items:
+        female: "👱‍♀️ Женский"
+        male: "👱‍♂️ Мужской"
+        any: "Не важно"
+      selected_mark: "✅"
+      styles:
+        female: primary
+        male: primary
+        any: secondary
+    pos:
+      x: 640
+      y: 360
+
+  age:
+    title: "Настройка поиска: возраст"
+    text: |-
+      ✏️ Введите желаемый возраст собеседника
+
+      ℹ️ Вы можете настроить поиск "от 26" введя "26+", или указать диапазон поиска, например, "24-34"
+    keyboard: reply
+    buttons_from: dating
+    pos:
+      x: 960
+      y: 0
+
+  notice:
+    title: "Уведомление (рассылка)"
+    on: notice
+    pos:
+      x: 0
+      y: 720
+
+  # Кнопки прежней нижней клавиатуры диалога. Сейчас бот их не показывает, но у людей они могли
+  # остаться в клиенте ВК: текст нажатия обрабатывается как «Следующий собеседник» и «Закончить диалог».
+  legacy_keys:
+    title: "Старая клавиатура диалога (только приём)"
+    keyboard: reply
+    buttons:
+      - - text: "➡️ Следующий собеседник"
+          action: next
+          style: primary
+          next: chat
+      - - text: "🛑 Закончить диалог"
+          action: stop
+          style: secondary
+          next: start_inline
+    pos:
+      x: 0
+      y: 900
+
+# Служебные тексты, тосты и шаблоны. {поля} подставляет код.
+texts:
+  start_button_marker: "Нажми кнопку начать"
+  searching: "🔎 Ищем собеседника..."
+  no_partners: "Сейчас собеседников нет, приходите чуть позже 😔"
+  stopped: |-
+    Найди собеседника прямо сейчас
+
+    Диалог остановлен. Нажми «Начать», чтобы начать снова.
+  report_sent: "Жалоба отправлена. Спасибо, что сообщили."
+  service_down: "Сервис временно недоступен. Попробуй через минуту."
+  media_premium: "Чтобы отправлять медиа, получите премиум 👇"
+  partner_no_premium: "Собеседник без премиума не может получать фото, видео и аудио"
+  premium_url: "https://pay.chatwithyou.site/"
+  premium_active: "👑 Премиум активен"
+  premium_active_until: "👑 Премиум активен до {date}"
+  partner_message: |-
+    👤 Собеседник:
+    {text}
+  toast_city: "Город: {city}"
+  toast_cities_refreshed: "Список обновлён — выберите город"

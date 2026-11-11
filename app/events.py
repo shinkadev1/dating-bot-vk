@@ -19,6 +19,10 @@ from app.handlers import cancel_search_timeout
 from app.peer import Peer
 from app.ui import FOUND_TEXT, PARTNER_LEFT_TEXT, UNDELIVERED_TEXT, format_partner
 
+# События Chat API, которые бот показывает пользователю. Каждое описано экраном с on: во flow.yaml
+# (message и media доставляют реплики и файлы собеседника без отдельного экрана).
+EVENTS = frozenset({"partner_found", "partner_left", "undeliverable", "notice"})
+
 _RECONNECT_DELAY_SECONDS = 3.0
 # Живые реплики идут тем же токеном сообщества. 10 сообщений/с оставляют запас под диалоги.
 _NOTICE_INTERVAL = 0.1

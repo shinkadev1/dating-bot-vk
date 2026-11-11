@@ -147,7 +147,13 @@ docker rm -f vk-bot >/dev/null 2>&1 || true
 docker compose up -d --no-build --force-recreate bot
 
 sleep 8
-docker logs vk-bot --tail 80 2>&1 | grep -E "Токенов ВК|VK:|Chat API|WebSocket|пропущен|Нет доступа|Токен невалиден|Бот запущен|Ошибка запуска|VK Error|Traceback" || true
+docker logs vk-bot --tail 80 2>&1 | grep -E "Токенов ВК|VK:|flow загружен|FlowError|Chat API|WebSocket|пропущен|Нет доступа|Токен невалиден|Бот запущен|Ошибка запуска|VK Error|Traceback" || true
+restarts=$(docker inspect -f '{{.RestartCount}}' vk-bot)
+running=$(docker inspect -f '{{.State.Running}}' vk-bot)
+if [ "$running" != "true" ] || [ "$restarts" -gt 0 ]; then
+  echo "Бот ВК не запустился (running=${running}, restarts=${restarts})." >&2
+  exit 1
+fi
 
 current_tag=${BOT_IMAGE##*:}
 docker images --format '{{.Repository}}:{{.Tag}}' | grep '/dating-bot:' | grep -v ':local$' | grep -v ":${current_tag}\$" \

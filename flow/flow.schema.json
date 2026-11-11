@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://postdesk.app/schemas/bot-flow/v1/flow.schema.json",
+  "title": "Карта бота (flow.yaml), version 1",
+  "description": "Экраны = узлы карты, кнопки goto/next = рёбра. Схема общая для ботов Telegram и ВКонтакте; ломающие изменения только с повышением version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "bot", "start", "screens"],
+  "properties": {
+    "version": {"const": 1},
+    "bot": {"enum": ["tg", "vk"]},
+    "start": {"$ref": "#/$defs/id"},
+    "screens": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"$ref": "#/$defs/id"},
+      "additionalProperties": {"$ref": "#/$defs/screen"}
+    },
+    "texts": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/id"},
+      "additionalProperties": {
+        "oneOf": [
+          {"type": "string"},
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text"],
+            "properties": {
+              "text": {"type": "string"},
+              "dev": {"type": "boolean"}
+            }
+          }
+        ]
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/command"}
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "style": {"enum": ["primary", "secondary", "success", "danger"]},
+    "screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "not": {"required": ["buttons", "buttons_from"]},
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 80},
+        "text": {"type": "string", "maxLength": 4096},
+        "image": {"type": "string", "pattern": "^images/[\\w.-]+\\.(jpg|png)$"},
+        "keyboard": {"enum": ["reply", "inline"]},
+        "buttons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {"$ref": "#/$defs/button"}
+          }
+        },
+        "buttons_from": {"$ref": "#/$defs/id"},
+        "next": {"$ref": "#/$defs/id"},
+        "handler": {"$ref": "#/$defs/id"},
+        "on": {"$ref": "#/$defs/id"},
+        "options": {"$ref": "#/$defs/options"},
+        "pos": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y"],
+          "properties": {
+            "x": {"type": "integer"},
+            "y": {"type": "integer"}
+          }
+        },
+        "dev": {"type": "boolean"}
+      }
+    },
+    "button": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "oneOf": [
+        {"required": ["action"]},
+        {"required": ["goto"]},
+        {"required": ["url"]}
+      ],
+      "properties": {
+        "text": {"type": "string", "minLength": 1, "maxLength": 64},
+        "action": {"$ref": "#/$defs/id"},
+        "goto": {"$ref": "#/$defs/id"},
+        "url": {"type": "string", "pattern": "^(https://|\\{premium_url\\})"},
+        "style": {"$ref": "#/$defs/style"},
+        "aliases": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "next": {"$ref": "#/$defs/id"},
+        "payload": {"type": "object"},
+        "plan": {"type": "string", "minLength": 1}
+      }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["callback", "items"],
+      "properties": {
+        "callback": {"type": "string", "minLength": 1, "maxLength": 64},
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {"$ref": "#/$defs/id"}
+          }
+        },
+        "items": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {"$ref": "#/$defs/id"},
+          "additionalProperties": {"type": "string", "minLength": 1}
+        },
+        "default": {"$ref": "#/$defs/id"},
+        "selected_mark": {"type": "string"},
+        "styles": {
+          "type": "object",
+          "propertyNames": {"$ref": "#/$defs/id"},
+          "additionalProperties": {"$ref": "#/$defs/style"}
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "description", "action"],
+      "properties": {
+        "command": {"type": "string", "pattern": "^[a-z_]{1,32}$"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 256},
+        "action": {"$ref": "#/$defs/id"},
+        "dev": {"type": "boolean"}
+      }
+    }
+  }
+}

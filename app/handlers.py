@@ -1,4 +1,8 @@
-"""Сценарии входящих сообщений: меню, поиск и диалог."""
+"""Сценарии входящих сообщений: меню, поиск и диалог.
+
+Тексты, подписи и клавиатуры берутся из flow/flow.yaml (app/flow.py, app/ui.py). Здесь только
+маршрутизация: токен текста или payload кнопки -> action из реестра ACTIONS, экран с handler -> HANDLERS.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +15,7 @@ from typing import Any
 
 from vkbottle.bot import Message, MessageEvent
 
+from app import flow
 from app.api_client import ChatApiError, NotChattingError, chat_api
 from app.gateway import gateway, send_vk_greeting
 from app.media import store_vk_media
@@ -18,25 +23,19 @@ from app.peer import Peer
 from app.premium import premium_offer
 from app.ui import (
     AGE_TEXT,
-    CHAT_BTN_NEXT,
-    CHAT_BTN_STOP,
     DATING_TEXT,
     DEFAULT_ROOM,
-    FIND_BTN,
     FOUND_TEXT,
     GENDERS,
     MENU_TEXT,
-    NEW_PARTNER_BTN,
     NO_PARTNERS_TEXT,
     PARTNER_LEFT_TEXT,
-    REPORT_BTN,
     REPORT_SENT_TEXT,
     ROOMS,
     ROOMS_TEXT,
     SEARCHING_TEXT,
     SERVICE_DOWN_TEXT,
     SETTINGS_TEXT,
-    STOP_BTN,
     STOPPED_TEXT,
     build_main_keyboard,
     build_rooms_keyboard,
@@ -52,6 +51,13 @@ _awaiting_age: set[Peer] = set()
 _AGE_RE = re.compile(
     r"^\s*(\d{1,2})\s*(?:\+|-\s*(\d{1,2}))?\s*(?:лет|года|год|л\.?)?\s*$",
     re.IGNORECASE,
+)
+# Сколько экранов подряд по полю next отправляется за один переход (защита от цикла).
+_MAX_SCREEN_CHAIN = 8
+# Действия нижних кнопок: приходят в payload {"command": ...}. Текстом их набрать нельзя —
+# текст уходит собеседнику. Текстом работают только start, report, stop и next (токены из flow).
+_PAYLOAD_ACTIONS = frozenset(
+    {"dating", "dating_find", "dating_rooms", "dating_settings", "main", "premium"}
 )
 
 
@@ -87,13 +93,18 @@ def parse_payload(raw: Any) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def _token(text: str) -> str:
+    return text.strip().lower()
+
+
 def _is_start(text: str, payload: dict) -> bool:
     """Сообщение «Начать», «Новый собеседник», /start или команда start из payload."""
-    lowered = text.strip().lower()
-    if lowered in {"начать", "/start", "start", NEW_PARTNER_BTN.lower(), FIND_BTN.lower()}:
+    current = flow.get()
+    lowered = _token(text)
+    if current.action_for(lowered) == "start":
         return True
     command = lowered.split()[0].split("@", 1)[0] if lowered else ""
-    if command in {"начать", "/start", "start"}:
+    if current.action_for(command) == "start":
         return True
     return payload.get("command") == "start"
 
@@ -102,7 +113,7 @@ def _is_report(text: str, payload: dict) -> bool:
     """Кнопка «Пожаловаться» или команда report из payload."""
     if payload.get("command") == "report":
         return True
-    return text.strip().lower() in {REPORT_BTN.lower(), "пожаловаться"}
+    return flow.get().action_for(_token(text)) == "report"
 
 
 async def stop_active(peer: Peer) -> None:
@@ -115,7 +126,7 @@ async def stop_active(peer: Peer) -> None:
 
 async def handle_stop(peer: Peer, text: str, active: bool) -> bool:
     """Заканчивает диалог или поиск и возвращает основное меню."""
-    if text.strip().lower() not in {CHAT_BTN_STOP.lower(), STOP_BTN.lower()} or not active:
+    if flow.get().action_for(text) != "stop" or not active:
         return False
     await stop_active(peer)
     return True
@@ -123,13 +134,18 @@ async def handle_stop(peer: Peer, text: str, active: bool) -> bool:
 
 async def handle_next(peer: Peer, text: str, searching: bool) -> bool:
     """Кнопка «Следующий собеседник» запускает новый поиск."""
-    if text != CHAT_BTN_NEXT:
+    if flow.get().action_for(text) != "next":
         return False
+    await _next_partner(peer, searching)
+    return True
+
+
+async def _next_partner(peer: Peer, searching: bool) -> None:
+    """Новый поиск; пока идёт прежний — только напоминание."""
     if searching:
         await gateway.send(peer, SEARCHING_TEXT, "line")
-        return True
+        return
     await connect_with_partner(peer)
-    return True
 
 
 async def handle_chat_line(
@@ -190,7 +206,9 @@ async def handle_incoming(
     except ChatApiError as exc:
         print(f"Не записал визит {peer.user_id}: {exc}", flush=True)
     try:
+        current = flow.get()
         command = payload.get("command")
+        action = command if isinstance(command, str) else None
         if peer in _awaiting_age:
             age = parse_age(text)
             if age is not None:
@@ -198,30 +216,19 @@ async def handle_incoming(
                 _age_choice[peer] = age
                 await send_premium_gate(peer)
                 return
-            if not command and not _is_start(text, payload):
+            if not command and not _is_start(text, payload) and current.goto_for(_token(text)) is None:
                 await gateway.send(peer, AGE_TEXT, "dating")
                 return
             _awaiting_age.discard(peer)
         if _is_start(text, payload):
             await connect_with_partner(peer)
             return
-        if command == "dating":
-            await handle_dating(peer)
+        target = payload.get(flow.GOTO_KEY) if action == flow.GOTO_COMMAND else current.goto_for(_token(text))
+        if isinstance(target, str) and target in current.screens:
+            await show_screen(peer, target)
             return
-        if command == "dating_find":
-            await handle_dating_find(peer)
-            return
-        if command == "dating_rooms":
-            await handle_dating_rooms(peer)
-            return
-        if command == "dating_settings":
-            await handle_dating_settings(peer)
-            return
-        if command == "main":
-            await handle_main_menu(peer)
-            return
-        if command == "premium":
-            await handle_premium(peer)
+        if action in _PAYLOAD_ACTIONS:
+            await _ACTION_RUNNERS[action](peer)
             return
         if _is_report(text, payload):
             await handle_report(peer)
@@ -284,7 +291,7 @@ async def choose_room(event: MessageEvent, bot_key: str) -> None:
         except Exception as exc:  # noqa: BLE001 — старое сообщение можно и не обновить
             print(f"Не обновил старый список vk:{bot_key}:{event.user_id}: {type(exc).__name__}: {exc}", flush=True)
         try:
-            await event.show_snackbar("Список обновлён — выберите город")
+            await event.show_snackbar(flow.get().text("toast_cities_refreshed"))
         except Exception as exc:  # noqa: BLE001
             print(f"Не подтвердил нажатие: {type(exc).__name__}: {exc}", flush=True)
         return
@@ -297,7 +304,7 @@ async def choose_room(event: MessageEvent, bot_key: str) -> None:
             flush=True,
         )
     try:
-        await event.show_snackbar(f"Город: {ROOMS[room]}")
+        await event.show_snackbar(flow.get().text("toast_city", city=ROOMS[room]))
     except Exception as exc:  # noqa: BLE001
         print(f"Не показал уведомление: {type(exc).__name__}: {exc}", flush=True)
 
@@ -324,45 +331,54 @@ async def choose_gender(event: MessageEvent, bot_key: str) -> None:
     await gateway.send(peer, AGE_TEXT, "dating")
 
 
+def _option_command(handler: str) -> str | None:
+    """Команда payload у вариантов экрана с этим handler (для городов — room, для пола — gender)."""
+    for screen in flow.get().screens.values():
+        if screen.handler == handler and screen.options is not None:
+            key = next(iter(screen.options.items))
+            command = screen.options.payload_data(key).get("command")
+            return command if isinstance(command, str) else None
+    return None
+
+
+def _button_runner(command: object, payload: dict) -> Callable[[Peer], Awaitable[None]] | None:
+    """Что делает нажатая inline-кнопка: действие из реестра по имени или переход на экран. None — ничего."""
+    if command == flow.GOTO_COMMAND:
+        screen_id = payload.get(flow.GOTO_KEY)
+        if isinstance(screen_id, str) and screen_id in flow.get().screens:
+            return lambda peer: show_screen(peer, screen_id)
+        return None
+    return _ACTION_RUNNERS.get(command) if isinstance(command, str) else None
+
+
 def vk_start_handler(bot_key: str):
-    """Нажатие inline-кнопки: поиск, остановка, жалоба, комната или переход по меню."""
+    """Нажатие inline-кнопки: действие по имени из payload, переход goto, город или пол."""
 
     async def _handle(event: MessageEvent) -> None:
         print(
             f"VK кнопка group={bot_key} from={event.user_id} peer={event.peer_id}",
             flush=True,
         )
-        command = parse_payload(event.payload).get("command")
-        if command == "room":
+        payload = parse_payload(event.payload)
+        command = payload.get("command")
+        if command is not None and command == _option_command("rooms"):
             await choose_room(event, bot_key)
             return
-        if command == "gender":
+        if command is not None and command == _option_command("settings"):
             await choose_gender(event, bot_key)
             return
         try:
             await event.send_empty_answer()
         except Exception as exc:  # noqa: BLE001 — ответ на нажатие не должен срывать поиск
             print(f"Не подтвердил нажатие: {type(exc).__name__}: {exc}", flush=True)
-        if command not in {"start", "stop", "report", "dating", "dating_find", "premium", "main"}:
+        runner = _button_runner(command, payload)
+        if runner is None:
             return
         if event.user_id is None or event.user_id <= 0:
             return
         peer = Peer(bot_key, event.user_id)
         try:
-            if command == "start":
-                await connect_with_partner(peer)
-            elif command == "dating_find":
-                await handle_dating_find(peer)
-            elif command == "stop":
-                await stop_active(peer)
-            elif command == "dating":
-                await handle_dating(peer)
-            elif command == "premium":
-                await handle_premium(peer)
-            elif command == "main":
-                await handle_main_menu(peer)
-            else:
-                await handle_report(peer)
+            await runner(peer)
         except ChatApiError as exc:
             print(f"Chat API недоступен для {peer}: {exc}", flush=True)
             await gateway.send(peer, SERVICE_DOWN_TEXT, "main")
@@ -439,6 +455,7 @@ async def answer_waiting(api: Any, bot_key: str) -> None:
 
 async def attach_start_buttons(api: Any, bot_key: str) -> None:
     """Дописывает кнопку «Начать» к свежим приветствиям, которые ушли без неё."""
+    marker = flow.get().text("start_button_marker")
     response = await api.request("messages.getConversations", {"count": 30})
     items = _vk_body(response).get("items") or []
     for item in items:
@@ -448,7 +465,7 @@ async def attach_start_buttons(api: Any, bot_key: str) -> None:
         history = await api.request("messages.getHistory", {"peer_id": peer_id, "count": 8})
         for message in _vk_body(history).get("items") or []:
             text = message.get("text") or ""
-            if int(message.get("out") or 0) != 1 or "Нажми кнопку начать" not in text:
+            if int(message.get("out") or 0) != 1 or marker not in text:
                 continue
             if _keyboard_buttons(message.get("keyboard")):
                 continue
@@ -576,3 +593,61 @@ async def connect_with_partner(peer: Peer) -> None:
         await gateway.send(peer, FOUND_TEXT, "chat")
         return
     _search_timeouts[peer] = asyncio.create_task(_leave_queue_later(peer))
+
+
+async def _run_next(peer: Peer) -> None:
+    """Кнопка «Следующий собеседник»: фаза берётся у Chat API."""
+    await _next_partner(peer, await chat_api.phase(peer) == "searching")
+
+
+async def _show_chat(peer: Peer) -> None:
+    """Экран диалога: текст «комната найдена» и клавиатура, зависящая от премиума."""
+    await gateway.send(peer, FOUND_TEXT, "chat")
+
+
+# Действия, которые код умеет выполнять. Кнопка во flow.yaml с другим action — ошибка CI и старта.
+# Имя действия = command в payload кнопки; те же функции вызывают токены текста и переходы.
+_ACTION_RUNNERS: dict[str, Callable[[Peer], Awaitable[None]]] = {
+    "start": connect_with_partner,
+    "stop": stop_active,
+    "report": handle_report,
+    "next": _run_next,
+    "dating": handle_dating,
+    "dating_find": handle_dating_find,
+    "dating_rooms": handle_dating_rooms,
+    "dating_settings": handle_dating_settings,
+    "main": handle_main_menu,
+    "premium": handle_premium,
+}
+ACTIONS = frozenset(_ACTION_RUNNERS)
+
+# Экраны с handler рисует код: во flow.yaml для них описаны текст, картинка, кнопки и варианты.
+_HANDLER_RUNNERS: dict[str, Callable[[Peer], Awaitable[None]]] = {
+    "premium_offer": handle_premium,
+    "chat_keyboard": _show_chat,
+    "rooms": handle_dating_rooms,
+    "settings": handle_dating_settings,
+}
+HANDLERS = frozenset(_HANDLER_RUNNERS)
+
+
+async def show_screen(peer: Peer, screen_id: str) -> None:
+    """Показывает экран из flow (переход goto). Экран с handler рисует код, остальные общий рендер.
+
+    Если у экрана без handler есть next, следом сразу уходит следующий экран; цикл обрывается.
+    """
+    current = flow.get()
+    seen: set[str] = set()
+    next_id: str | None = screen_id
+    while next_id is not None and next_id not in seen and len(seen) < _MAX_SCREEN_CHAIN:
+        seen.add(next_id)
+        screen = current.screen(next_id)
+        if screen.handler is not None:
+            runner = _HANDLER_RUNNERS.get(screen.handler)
+            if runner is None:
+                print(f"Нет обработчика {screen.handler} для экрана {next_id}", flush=True)
+                return
+            await runner(peer)
+            return
+        await gateway.send_screen(peer, next_id)
+        next_id = screen.next
