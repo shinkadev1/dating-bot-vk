@@ -23,6 +23,7 @@ from app.peer import Peer
 from app.premium import premium_offer
 from app.ui import (
     AGE_TEXT,
+    CHAT_BTN_NEXT,
     DATING_TEXT,
     DEFAULT_ROOM,
     FOUND_TEXT,
@@ -133,8 +134,11 @@ async def handle_stop(peer: Peer, text: str, active: bool) -> bool:
 
 
 async def handle_next(peer: Peer, text: str, searching: bool) -> bool:
-    """Кнопка «Следующий собеседник» запускает новый поиск."""
-    if flow.get().action_for(text) != "next":
+    """Кнопка «Следующий собеседник» запускает новый поиск.
+
+    Как и раньше, только при точном совпадении с подписью: другой регистр уходит собеседнику.
+    """
+    if text != CHAT_BTN_NEXT or flow.get().action_for(text) != "next":
         return False
     await _next_partner(peer, searching)
     return True

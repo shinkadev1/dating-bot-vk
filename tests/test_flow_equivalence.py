@@ -118,6 +118,20 @@ class ButtonActionTests(unittest.TestCase):
             elif "|E|" not in key:
                 self.assertTrue(new["gateway"] or new["api"], key)
 
+    def test_next_requires_exact_caption(self) -> None:
+        import asyncio
+        from unittest import mock
+
+        from app import handlers
+
+        async def run(text: str) -> bool:
+            with mock.patch.object(handlers, "_next_partner", mock.AsyncMock()):
+                return await handlers.handle_next(object(), text, False)
+
+        self.assertTrue(asyncio.run(run(ui.CHAT_BTN_NEXT)))
+        self.assertFalse(asyncio.run(run(ui.CHAT_BTN_NEXT.lower())))
+        self.assertFalse(asyncio.run(run(ui.CHAT_BTN_NEXT.upper())))
+
     def test_ui_keeps_old_public_names(self) -> None:
         for name in SNAPSHOT["texts"]["__names__"]:
             self.assertTrue(hasattr(ui, name), name)
