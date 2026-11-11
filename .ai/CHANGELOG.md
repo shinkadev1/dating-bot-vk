@@ -1,5 +1,9 @@
 # История важных изменений
 
+## 2026-11-11 — flow/flow.yaml
+
+Пользовательские тексты, кнопки, клавиатуры, цвета, картинки, переходы и тосты бота переехали в `flow/flow.yaml` (+ `flow/flow.schema.json`, `flow/images`): CRM «Постдеск» читает и правит файл в GitHub и рисует карту бота. Поведение для пользователя не менялось: эквивалентность подтверждена снимком кода до перехода (`tests/fixtures/ui_snapshot.json`). Единственное отличие: нажатия inline-кнопок с действиями `dating_rooms`, `dating_settings`, `next`, которые раньше молча игнорировались (таких кнопок нет), теперь выполняются по имени action. Новое: `app/flow.py` (загрузка, схема, лимиты ВК, сверка с реестрами `ACTIONS`/`HANDLERS`/`EVENTS` при старте, проверка полей шаблонов), общий рендер экранов goto/next без кода, тест «нет пользовательских литералов в коде», job `validate` в CI, проверка `RestartCount` в `deploy/update.sh`. Файлы: `app/flow.py`, `app/ui.py`, `app/handlers.py`, `app/gateway.py`, `app/events.py`, `app/main.py`, `flow/`, `tests/`, `Dockerfile`, `requirements.txt`, `.github/workflows/deploy.yml`, `deploy/update.sh`. Проверки: `python -m app.flow`, `python -m unittest discover -s tests -v`. Не проверено: docker build, деплой, живой VK.
+
 ## 2026-11-03 — личная ссылка оплаты премиума (ветка paylink)
 
 Кнопки «Купить премиум» в промо, воротах «Чата знакомств», клавиатуре диалога и отказе в медиа открывают личную ссылку Chat API вместо статичной `PREMIUM_URL`; из текста отказа в медиа убрана ссылка на сообщество. Причина: оплата должна узнавать пользователя без email. Зависит от маршрута `premium/link` ветки `payments` vk-bot; без него работает запасная статичная ссылка. Проверки: `compileall`, smoke-скрипт с подменённым Chat API. Живой VK и настоящий Chat API не проверены, не задеплоено.
