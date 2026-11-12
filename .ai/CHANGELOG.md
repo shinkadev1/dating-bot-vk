@@ -1,5 +1,9 @@
 # История важных изменений
 
+## 2026-11-12 — размытое фото без премиума (ветка loop/photo-blur, не выкачено)
+
+Контракт Chat API: событие `media` может содержать `locked: true` — тогда `media_id` указывает на размытую копию фото (image/jpeg). `events._deliver` скачивает байты и вызывает `gateway.send_locked_photo`: фото вложением, текст «🔒 Просмотр фото доступен только с премиумом» и inline-кнопка «💎 Купить премиум» с личной ссылкой (экран `photo_locked` в `flow/flow.yaml` без `on`, `PHOTO_LOCKED_TEXT` в `app/ui.py`). Схема и version flow не менялись. Тесты: `tests/test_photo_locked.py`. Живой VK не проверен.
+
 ## 2026-11-12 — промо премиума каждые 10 диалогов (ветка loop/promo-every-10, не выкачено)
 
 Контракт Chat API: событие `partner_left` может содержать `promo: true`, ответ `POST /stop` — `promo: true` (по умолчанию false); отдельного события promo нет. `api_client.stop()` возвращает `StopResult(was_active, promo)`. Без активного премиума бот показывает экраны `partner_left_promo` и `stopped_promo` (`flow/flow.yaml`, `images/premium.png`, кнопки «Купить премиум» с личной ссылкой, «Новый собеседник», в первом ещё «Пожаловаться»); при премиуме и без флага поведение прежнее. Экран `premium_promo` удалён. Тесты: `tests/test_promo_event.py`. Зависит от vk-bot (не выкачено, выкатывается после ботов; живой VK не проверен).

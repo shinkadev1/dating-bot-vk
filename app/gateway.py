@@ -14,6 +14,7 @@ from app.ui import (
     COMMUNITY_GREETING,
     MEDIA_PREMIUM_TEXT,
     PARTNER_NO_PREMIUM_TEXT,
+    PHOTO_LOCKED_TEXT,
     PREMIUM_STATUS_TEXT,
     ROOMS_TEXT,
     SETTINGS_TEXT,
@@ -295,6 +296,27 @@ class Gateway:
         except Exception as exc:  # noqa: BLE001
             print(
                 f"Не отправил медиа vk:{peer.bot_key}:{peer.user_id}: {type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return not _vk_blocked(exc)
+
+    async def send_locked_photo(self, peer: Peer, content_type: str, data: bytes) -> bool:
+        """Размытое фото собеседника с текстом «только с премиумом» и кнопкой покупки.
+
+        False — человек недоступен, диалог надо закрыть. Ошибка загрузки диалог не обрывает.
+        """
+        api = self._apis.get(peer.bot_key)
+        if api is None:
+            print(f"Нет сообщества ВК {peer.bot_key}", flush=True)
+            return False
+        try:
+            attachment = await _vk_attachment(api, peer.user_id, "photo", content_type, data)
+            keyboard = build_keyboard("photo_locked", offer=await premium_offer(peer))
+            await send_vk(api, peer.user_id, PHOTO_LOCKED_TEXT, keyboard, attachment)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"Не отправил закрытое фото vk:{peer.bot_key}:{peer.user_id}: {type(exc).__name__}: {exc}",
                 flush=True,
             )
             return not _vk_blocked(exc)

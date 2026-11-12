@@ -82,6 +82,8 @@ SERVICE_DOWN_TEXT = _text("service_down")
 # Ссылка на оплату уходит только кнопкой OpenLink: из текста ВК соберёт сниппет и сам откроет её.
 MEDIA_PREMIUM_TEXT = _text("media_premium")
 PARTNER_NO_PREMIUM_TEXT = _text("partner_no_premium")
+# Подпись к размытому фото собеседника; кнопка покупки собирается build_keyboard("photo_locked").
+PHOTO_LOCKED_TEXT = _screen_text("photo_locked")
 # Запасная ссылка, если Chat API не выдал личную.
 PREMIUM_URL = _text("premium_url")
 # Тарифы оплаты: (plan, подпись кнопки). Страница оплаты по ссылке с plan сразу открывает заказ.

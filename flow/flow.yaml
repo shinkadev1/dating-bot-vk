@@ -188,6 +188,20 @@ screens:
       x: 960
       y: 180
 
+  photo_locked:
+    title: "Фото собеседника (без премиума)"
+    text: "🔒 Просмотр фото доступен только с премиумом"
+    keyboard: inline
+    # Размытое фото собеседника (событие media с locked) уходит вложением вместе с этим текстом
+    # и кнопкой покупки. Ссылка оплаты личная, подставляется кодом вместо {premium_url}.
+    buttons:
+      - - text: "💎 Купить премиум"
+          url: "{premium_url}"
+          style: success
+    pos:
+      x: 960
+      y: 360
+
   undelivered:
     title: "Собеседник недоступен"
     on: undeliverable

@@ -49,7 +49,11 @@ async def _deliver(body: dict) -> None:
         except ChatApiError as exc:
             print(f"Не скачал медиа {media_id} для {peer}: {exc}", flush=True)
             return
-        delivered = await gateway.send_media(peer, file_kind, content_type, data)
+        if body.get("locked"):
+            # Собеседник без премиума: media_id указывает на размытую копию фото.
+            delivered = await gateway.send_locked_photo(peer, content_type, data)
+        else:
+            delivered = await gateway.send_media(peer, file_kind, content_type, data)
     elif kind == "partner_left":
         cancel_search_timeout(peer)
         if body.get("reason") == "undeliverable":

@@ -1,5 +1,9 @@
 # Состояние dating-bot-vk
 
+## Размытое фото без премиума, 2026-11-12
+
+Ветка `loop/photo-blur`: экран `photo_locked`, `send_locked_photo`, обработка `locked` в событии `media`; `python -m app.flow` и 117 тестов проходят. Не выкачено; Chat API пока не шлёт `locked`; живой VK не проверен.
+
 ## Промо каждые 10 диалогов, 2026-11-12
 
 Ветка `loop/promo-every-10`: флаг `promo` в `partner_left` и `POST /stop`, экраны `partner_left_promo` и `stopped_promo` реализованы, `python -m app.flow` и 98 тестов проходят. Не выкачено; Chat API пока не шлёт флаг; живой VK не проверен.
