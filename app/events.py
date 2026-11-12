@@ -60,7 +60,7 @@ async def _deliver(body: dict) -> None:
         return
     elif kind == "promo":
         # Промо не диалоговое событие: недоставка не закрывает пару и не трогает поиск.
-        offer = await premium_offer(peer)
+        offer = await premium_offer(peer, fresh=True)
         if offer.active:
             print(f"Промо премиума {peer}: премиум активен, пропущено", flush=True)
             return
