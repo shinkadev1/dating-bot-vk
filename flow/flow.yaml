@@ -188,6 +188,25 @@ screens:
       x: 960
       y: 180
 
+  daily_promo:
+    title: "Ежедневная рассылка (вечер)"
+    text: "😏👇 В пошлом чате горячо, оценишь?"
+    keyboard: inline
+    # Экран шлёт Chat API в событии notice с полем screen (рассылка по расписанию), без картинки.
+    # Ссылка оплаты личная, подставляется кодом вместо {premium_url}.
+    buttons:
+      - - text: "🔥 Начать чат"
+          action: start
+          style: primary
+          next: chat
+      - - text: "💎 Премиум"
+          url: "{premium_url}"
+          style: success
+          next: premium
+    pos:
+      x: 960
+      y: 540
+
   photo_locked:
     title: "Фото собеседника (без премиума)"
     text: "🔒 Просмотр фото доступен только с премиумом"

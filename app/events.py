@@ -12,6 +12,7 @@ from urllib.parse import quote
 
 from websockets.asyncio.client import connect
 
+from app import flow
 from app.api_client import ChatApiError, chat_api
 from app.config import CHAT_API_URL, EVENTS_CONSUMER, chat_api_headers
 from app.gateway import gateway
@@ -82,9 +83,17 @@ async def _deliver_notice(body: dict) -> None:
         return
     to = body.get("to") or {}
     text = str(body.get("text") or "").strip()
-    if not text or "bot_key" not in to or "user_id" not in to:
+    screen = str(body.get("screen") or "")
+    if (not text and not screen) or "bot_key" not in to or "user_id" not in to:
         return
     peer = Peer(str(to["bot_key"]), int(to["user_id"]))
+    if screen and screen in flow.get().screens:
+        await asyncio.sleep(_NOTICE_INTERVAL)
+        await gateway.send_screen(peer, screen)
+        return
+    if not text:
+        print(f"Неизвестный экран уведомления {screen}, пропускаю", flush=True)
+        return
     await asyncio.sleep(_NOTICE_INTERVAL)
     photo, content_type = await _notice_photo(body)
     await gateway.send_notice(peer, text, photo=photo, content_type=content_type)
