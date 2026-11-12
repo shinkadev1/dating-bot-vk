@@ -10,7 +10,8 @@ VK Long Poll → handlers → REST Chat API. Обратная доставка: 
 
 | Путь | Ответственность |
 | --- | --- |
-| `app/main.py` | Запуск ботов сообществ и обработчиков событий. |
+| `app/main.py` | Запуск менеджера сообществ и потребителей событий Chat API. |
+| `app/communities.py` | `CommunityManager`: набор сообществ = CRM (`/channels/vk/tokens`) ∪ env-токены, запуск/остановка Long Poll раз в `COMMUNITIES_SYNC_SECONDS`, импорт токенов и статусы в CRM. |
 | `app/longpoll.py` | Входящие события VK. |
 | `app/startup.py` | Подготовка сообществ и обработка ожидающих сообщений. |
 | `app/handlers.py` | Маршрутизация по `flow.action_for` и payload, реестры `ACTIONS`/`HANDLERS`, переходы goto, фазы UI, города, пол и возраст. |

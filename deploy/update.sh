@@ -95,9 +95,7 @@ apply_secret_tokens() {
     set_env VK_TOKEN "$first"
     set_env VK_TOKENS "$rest"
   elif ! grep -qE '^VK_TOKEN=.+' .env 2>/dev/null; then
-    echo "В секрете нет токена сообщества ВК, и в .env на сервере его тоже нет." >&2
-    rm -f "$secret_file" "$vk_file" "$vk_sorted"
-    exit 1
+    echo "Предупреждение: в секрете и в .env нет токена ВК. Сообщества бот возьмёт из CRM." >&2
   else
     echo "В секрете нет токена ВК. Оставляю VK_TOKEN из .env на сервере."
   fi
@@ -107,8 +105,7 @@ apply_secret_tokens() {
 apply_secret_tokens
 
 if ! grep -qE '^VK_TOKEN=.+' .env 2>/dev/null; then
-  echo "Нет VK_TOKEN. Добавьте токен сообщества в секрет ENV_FILE." >&2
-  exit 1
+  echo "Предупреждение: нет VK_TOKEN. Бот возьмёт сообщества из CRM (если Chat API их отдаёт)." >&2
 fi
 
 if ! grep -qE '^CHAT_API_SERVICE_TOKEN=.+' .env 2>/dev/null; then

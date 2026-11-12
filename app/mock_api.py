@@ -27,6 +27,15 @@ class MockChatApi:
     async def register_channel(self, platform: str, external_id: str, title: str) -> None:
         return None
 
+    async def vk_communities(self) -> dict:
+        return {"communities": [], "disabled": []}
+
+    async def import_vk_community(self, group_id: int, title: str, token: str) -> bool:
+        return False
+
+    async def report_vk_status(self, items: list[dict]) -> None:
+        return None
+
     async def phase(self, peer: Peer) -> str:
         return self._phase_of(peer)
 

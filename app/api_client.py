@@ -86,6 +86,55 @@ class ChatApiClient:
         if response.is_error:
             raise ChatApiError(f"POST {path}: HTTP {response.status_code} {response.text}")
 
+    async def vk_communities(self) -> dict:
+        """Сообщества ВК из CRM: {"communities": [{group_id, title, token}], "disabled": [group_id]}.
+
+        Старый Chat API (404/503) и сбой сети приходят как ChatApiError: вызывающий работает на env-токенах.
+        """
+        path = "/channels/vk/tokens"
+        try:
+            response = await self._http.get(path)
+        except httpx.HTTPError as exc:
+            raise ChatApiError(f"GET {path}: {type(exc).__name__}: {exc}") from exc
+        if response.is_error:
+            raise ChatApiError(f"GET {path}: HTTP {response.status_code}")
+        try:
+            body = response.json()
+        except ValueError as exc:
+            raise ChatApiError(f"GET {path}: ответ не JSON") from exc
+        if not isinstance(body, dict):
+            raise ChatApiError(f"GET {path}: неожиданный ответ")
+        return {
+            "communities": [item for item in body.get("communities") or [] if isinstance(item, dict)],
+            "disabled": list(body.get("disabled") or []),
+        }
+
+    async def import_vk_community(self, group_id: int, title: str, token: str) -> bool:
+        """Передаёт токен из env в Chat API. True — токен сохранён (сообщества там ещё не было)."""
+        path = "/channels/vk/import"
+        try:
+            response = await self._http.post(
+                path, json={"group_id": group_id, "title": title, "token": token}
+            )
+        except httpx.HTTPError as exc:
+            raise ChatApiError(f"POST {path}: {type(exc).__name__}: {exc}") from exc
+        if response.is_error:
+            raise ChatApiError(f"POST {path}: HTTP {response.status_code}")
+        try:
+            return bool(response.json().get("stored"))
+        except (ValueError, AttributeError):
+            return False
+
+    async def report_vk_status(self, items: list[dict]) -> None:
+        """Отправляет статусы сообществ: [{group_id, status: "ok"|"error", error}]."""
+        path = "/channels/vk/status"
+        try:
+            response = await self._http.post(path, json={"items": items})
+        except httpx.HTTPError as exc:
+            raise ChatApiError(f"POST {path}: {type(exc).__name__}: {exc}") from exc
+        if response.is_error:
+            raise ChatApiError(f"POST {path}: HTTP {response.status_code}")
+
     async def phase(self, peer: Peer) -> str:
         return (await self._request("GET", peer, "state"))["phase"]
 

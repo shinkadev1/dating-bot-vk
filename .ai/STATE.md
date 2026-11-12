@@ -1,5 +1,9 @@
 # Состояние dating-bot-vk
 
+## Сообщества из CRM, 2026-11-12
+
+Ветка `loop/vk-communities-crm`: `app/communities.py` (CommunityManager), клиент `vk_communities`/`import_vk_community`/`report_vk_status`, `gateway.remove`, `COMMUNITIES_SYNC_SECONDS`; `deploy/update.sh` без VK_TOKEN только предупреждает. `python -m app.flow` и 129 тестов проходят (12 новых в `tests/test_communities.py`, на заглушках). Не выкачено; зависит от маршрутов Chat API vk-bot (выпускается первым); живой VK и реальный Chat API не проверены.
+
 ## Размытое фото без премиума, 2026-11-12
 
 Ветка `loop/photo-blur`: экран `photo_locked`, `send_locked_photo`, обработка `locked` в событии `media`; `python -m app.flow` и 117 тестов проходят. Не выкачено; Chat API пока не шлёт `locked`; живой VK не проверен.

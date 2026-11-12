@@ -143,6 +143,10 @@ class Gateway:
         """Регистрирует API сообщества. Ключ — id сообщества."""
         self._apis[bot_key] = api
 
+    def remove(self, bot_key: str) -> None:
+        """Забывает API сообщества. Дальше отправка в него вернёт «Нет сообщества»."""
+        self._apis.pop(bot_key, None)
+
     async def send(self, peer: Peer, text: str, kind: str) -> bool:
         """Отправляет текст и клавиатуру. False, если ВК не принял сообщение."""
         try:
