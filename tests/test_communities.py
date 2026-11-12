@@ -5,9 +5,12 @@ import io
 import unittest
 from contextlib import redirect_stdout
 
+from vkbottle import VKAPIError
+
 from app.api_client import ChatApiError
-from app.communities import CommunityManager
+from app.communities import CommunityManager, human_error
 from app.gateway import gateway
+from app.startup import PreflightError
 
 TOKEN_A = "vk1.a.AAAAAAAAAAAAAAAAAAAAAAAA"
 TOKEN_B = "vk1.a.BBBBBBBBBBBBBBBBBBBBBBBB"
@@ -27,9 +30,11 @@ class FakeHttp:
 class FakePolling:
     def __init__(self) -> None:
         self.stopped = False
+        self.in_gateway_at_stop: bool | None = None
 
     def stop(self) -> None:
         self.stopped = True
+        self.in_gateway_at_stop = "2" in gateway._apis
 
 
 class FakeApi:
@@ -231,6 +236,81 @@ class CommunityManagerTest(unittest.IsolatedAsyncioTestCase):
             await asyncio.gather(runner, return_exceptions=True)
         self.assertEqual(manager.running_ids, [])
         self.assertTrue(self.bots[0].api.http_client.closed)
+
+    async def test_gateway_removed_before_polling_stop(self) -> None:
+        self.api.remote = {"communities": [community(2, TOKEN_B)], "disabled": []}
+        manager = self.manager([])
+        await self.sync(manager)
+        bot = self.bots[0]
+        await manager._stop("2")
+        self.assertIs(bot.polling.in_gateway_at_stop, False)
+
+    async def test_import_retried_until_accepted(self) -> None:
+        calls: list[int] = []
+        original = self.api.import_vk_community
+
+        async def flaky(group_id: int, title: str, token: str) -> bool:
+            calls.append(group_id)
+            if len(calls) == 1:
+                raise ChatApiError("POST /channels/vk/import: HTTP 503")
+            return await original(group_id, title, token)
+
+        self.api.import_vk_community = flaky
+        manager = self.manager([TOKEN_A])
+        await self.sync(manager)
+        self.assertEqual(calls, [1])
+        await self.sync(manager)
+        self.assertEqual(calls, [1, 1])
+        await self.sync(manager)
+        self.assertEqual(calls, [1, 1])
+        await manager.stop_all()
+
+    async def test_first_sync_failure_does_not_stop_run(self) -> None:
+        async def broken(items: list[dict]) -> None:
+            raise RuntimeError("boom")
+
+        self.api.report_vk_status = broken
+        self.api.remote = {"communities": [community(2, TOKEN_B)], "disabled": []}
+        manager = self.manager([])
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            runner = asyncio.create_task(manager.run())
+            await asyncio.wait_for(manager.ready.wait(), 2)
+            await asyncio.sleep(0.05)
+            self.assertFalse(runner.done())
+            runner.cancel()
+            await asyncio.gather(runner, return_exceptions=True)
+        self.assertIn("boom", buffer.getvalue())
+
+    async def test_human_status_texts(self) -> None:
+        key = PreflightError("long instruction", kind="key", code=5, vk_message="ключ отозван")
+        self.assertEqual(human_error(key, TOKEN_A), "Ключ не подошёл: ключ отозван (код 5)")
+        lp = PreflightError("x", kind="longpoll", code=15, vk_message="Access denied")
+        self.assertEqual(human_error(lp), "Нет доступа к Long Poll: Access denied (код 15)")
+        vk = VKAPIError[5](error_msg="User authorization failed")
+        self.assertEqual(human_error(vk, stopped=True), "Long Poll остановился: User authorization failed (код 5)")
+        long = PreflightError("x", kind="key", code=5, vk_message="слово " * 400)
+        text = human_error(long)
+        self.assertLessEqual(len(text), 500)
+        self.assertTrue(text.endswith("… (код 5)"))
+        self.assertNotIn(TOKEN_A, human_error(RuntimeError(f"url?access_token={TOKEN_A}"), TOKEN_A))
+
+    async def test_crm_status_is_human_readable(self) -> None:
+        self.api.remote = {"communities": [community(1, TOKEN_A), community(2, TOKEN_B)], "disabled": []}
+
+        def preflight(token: str) -> tuple[int, str]:
+            if token == TOKEN_A:
+                raise PreflightError("инструкция VK Error [5]", kind="key", code=5, vk_message="ключ отозван")
+            return 2, "G2"
+
+        manager = CommunityManager(
+            [], api=self.api, interval=0.01, preflight=preflight, make_bot=self.make_bot,
+            attach=lambda bot, key: None, listener=self.listener,
+        )
+        await self.sync(manager)
+        report = {item["group_id"]: item for item in self.api.statuses[-1]}
+        self.assertEqual(report[1]["error"], "Ключ не подошёл: ключ отозван (код 5)")
+        await manager.stop_all()
 
     async def test_preflight_runs_in_thread(self) -> None:
         import threading

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
-from vkbottle import GroupEventType
+from vkbottle import GroupEventType, VKAPIError
 from vkbottle.bot import Bot, MessageEvent
 from vkbottle.http.aiohttp import AiohttpClient
 
@@ -16,11 +18,60 @@ from app.config import COMMUNITIES_SYNC_SECONDS
 from app.gateway import gateway
 from app.handlers import answer_waiting, attach_start_buttons, vk_handler, vk_start_handler
 from app.longpoll import VersionedBotPolling
-from app.startup import preflight_check
+from app.startup import PreflightError, preflight_check
 
 _STATUS_BATCH = 200
 _ERROR_LIMIT = 500
 _STOP_TIMEOUT = 10.0
+_TOKEN_RE = re.compile(r"vk[12]\.[A-Za-z0-9_.\-]+|access_token=[^&\s'\"]+")
+
+# Служебные статусы для CRM (не тексты бота для людей в ВК).
+_KEY_FAILED = "Ключ не подошёл: {msg} (код {code})"
+_LONGPOLL_FAILED = "Нет доступа к Long Poll: {msg} (код {code})"
+_VK_FAILED = "{msg} (код {code})"
+_STOPPED_CODE = "Long Poll остановился: {msg} (код {code})"
+_STOPPED_MSG = "Long Poll остановился: {msg}"
+_STOPPED = "Long Poll остановился"
+_NOT_STARTED = "Ещё не запущено"
+
+
+def clean(message: str, token: str | None = None) -> str:
+    """Текст для логов и CRM: без токенов, одной строкой, не длиннее лимита."""
+    if token:
+        message = message.replace(token, "***")
+    message = _TOKEN_RE.sub("***", message)
+    return " ".join(message.split())[:_ERROR_LIMIT]
+
+
+def _fit(template: str, message: str, token: str | None, code: object = "") -> str:
+    """Подставляет сообщение ВК в шаблон так, чтобы весь текст влез в лимит, а шаблон не обрывался."""
+    message = clean(message, token)
+    room = _ERROR_LIMIT - len(template.format(msg="", code=code))
+    if len(message) > room:
+        message = message[: max(room - 1, 0)].rstrip() + "…"
+    return template.format(msg=message, code=code)
+
+
+def human_error(exc: BaseException, token: str | None = None, *, stopped: bool = False) -> str:
+    """Короткое объяснение сбоя для CRM: сообщение ВК и код, без инструкций и токена."""
+    if isinstance(exc, PreflightError):
+        template = _KEY_FAILED if exc.kind == "key" else _LONGPOLL_FAILED
+        return _fit(template, exc.vk_message or "VK", token, exc.code)
+    if isinstance(exc, VKAPIError):
+        code = getattr(exc, "code", "")
+        return _fit(_STOPPED_CODE if stopped else _VK_FAILED, exc.error_msg, token, code)
+    text = str(exc) or type(exc).__name__
+    if stopped:
+        return _fit(_STOPPED_MSG, f"{type(exc).__name__}: {text}", token)
+    return clean(text, token)
+
+
+class CheckFailed(RuntimeError):
+    """Проверка токена не прошла. crm — текст для CRM, str() — полный текст для логов."""
+
+    def __init__(self, log: str, crm: str) -> None:
+        super().__init__(log)
+        self.crm = crm
 
 
 def community_bot(token: str) -> Bot:
@@ -44,13 +95,14 @@ def attach_handlers(bot: Bot, bot_key: str) -> None:
     bot.on.raw_event(GroupEventType.MESSAGE_EVENT, MessageEvent)(vk_start_handler(bot_key))
 
 
-def log_task_end(task: asyncio.Task) -> None:
+def log_task_end(task: asyncio.Task, token: str | None = None) -> None:
     """Печатает падение задачи. Иначе vkbottle пишет ошибку только в loguru."""
     if task.cancelled():
         return
     exc = task.exception()
     if exc is not None:
-        print(f"Задача {task.get_name()} упала: {type(exc).__name__}: {exc}", flush=True)
+        detail = clean(f"{type(exc).__name__}: {exc}", token)
+        print(f"Задача {task.get_name()} упала: {detail}", flush=True)
 
 
 async def listen(bot: Bot, group_id: str) -> None:
@@ -101,7 +153,8 @@ class CommunityManager:
         self._listener = listener
         self._running: dict[str, _Running] = {}
         self._env_info: dict[str, tuple[int, str]] = {}  # токен env -> (group_id, название)
-        self._errors: dict[str, str] = {}
+        self._errors: dict[str, str] = {}  # group_id -> текст для CRM
+        self._imported: set[str] = set()  # env-токены, принятые CRM без ошибки
         self._api_last: dict | None = None  # последний удачный ответ CRM
         self.ready = asyncio.Event()  # первая синхронизация завершена
 
@@ -109,19 +162,14 @@ class CommunityManager:
     def running_ids(self) -> list[str]:
         return sorted(self._running)
 
-    @staticmethod
-    def _clean(message: str, token: str | None = None) -> str:
-        """Текст ошибки для логов и CRM: без токена, одной строкой не длиннее лимита."""
-        if token:
-            message = message.replace(token, "***")
-        return " ".join(message.split())[:_ERROR_LIMIT]
+    _clean = staticmethod(clean)
 
     async def _check(self, token: str) -> tuple[int, str]:
         """Синхронная проверка доступа к Long Poll выполняется в потоке, чтобы не блокировать цикл."""
         try:
             return await asyncio.to_thread(self._preflight, token)
         except (SystemExit, Exception) as exc:  # noqa: BLE001 — preflight сообщает отказ через SystemExit
-            raise RuntimeError(self._clean(str(exc) or type(exc).__name__, token)) from None
+            raise CheckFailed(clean(str(exc) or type(exc).__name__, token), human_error(exc, token)) from None
 
     async def _resolve_env(self) -> None:
         """Проверяет env-токены, которые ещё не удалось проверить, и передаёт их токены в CRM."""
@@ -130,15 +178,19 @@ class CommunityManager:
                 continue
             try:
                 group_id, name = await self._check(token)
-            except RuntimeError as exc:
+            except CheckFailed as exc:
                 print(f"Токен сообщества пропущен: {exc}", flush=True)
                 continue
             self._env_info[token] = (group_id, name)
+        for token, (group_id, name) in list(self._env_info.items()):
+            if token in self._imported:
+                continue
             try:
                 if await self._api.import_vk_community(group_id, name, token):
                     print(f"Токен group_id={group_id} передан в CRM", flush=True)
+                self._imported.add(token)  # без ошибки: повторять не нужно
             except ChatApiError as exc:
-                print(f"Не передал токен group_id={group_id} в CRM: {self._clean(str(exc), token)}", flush=True)
+                print(f"Не передал токен group_id={group_id} в CRM: {clean(str(exc), token)}", flush=True)
 
     async def _fetch(self) -> dict | None:
         """Список сообществ из CRM. Сбой — прежний список (или None, если его не было)."""
@@ -185,10 +237,11 @@ class CommunityManager:
                 await self._close_bot(bot)
                 raise
         except Exception as exc:  # noqa: BLE001 — одно сообщество не должно ронять остальные
-            self._errors[group_id] = self._clean(str(exc) or type(exc).__name__, token)
-            print(f"Сообщество group_id={group_id} не запущено: {self._errors[group_id]}", flush=True)
+            self._errors[group_id] = exc.crm if isinstance(exc, CheckFailed) else human_error(exc, token)
+            detail = clean(str(exc) or type(exc).__name__, token)
+            print(f"Сообщество group_id={group_id} не запущено: {detail}", flush=True)
             return
-        task.add_done_callback(log_task_end)
+        task.add_done_callback(partial(log_task_end, token=token))
         self._running[group_id] = _Running(token, bot, task)
         self._errors.pop(group_id, None)
         print(f"VK: сообщество на Long Poll (group_id={group_id})", flush=True)
@@ -205,6 +258,7 @@ class CommunityManager:
         running = self._running.pop(group_id, None)
         if running is None:
             return
+        gateway.remove(group_id)  # сразу: новые доставки в это сообщество не пойдут
         try:
             running.bot.polling.stop()
         except Exception:  # noqa: BLE001 — до первого listen() события остановки ещё нет
@@ -214,7 +268,6 @@ class CommunityManager:
             await asyncio.wait_for(asyncio.gather(running.task, return_exceptions=True), _STOP_TIMEOUT)
         except asyncio.TimeoutError:
             print(f"Задача group_id={group_id} не остановилась за {_STOP_TIMEOUT:.0f} с", flush=True)
-        gateway.remove(group_id)
         await self._close_bot(running.bot)
         print(f"VK: сообщество остановлено (group_id={group_id})", flush=True)
 
@@ -232,10 +285,7 @@ class CommunityManager:
                 await self._stop(group_id)
             elif current.task.done():
                 exc = None if current.task.cancelled() else current.task.exception()
-                self._errors[group_id] = self._clean(
-                    f"Long Poll stopped: {type(exc).__name__}: {exc}" if exc else "Long Poll stopped",
-                    token,
-                )
+                self._errors[group_id] = human_error(exc, token, stopped=True) if exc else _STOPPED
                 await self._stop(group_id)
             else:
                 continue
@@ -253,7 +303,7 @@ class CommunityManager:
                 items.append({"group_id": numeric, "status": "ok", "error": ""})
             else:
                 items.append(
-                    {"group_id": numeric, "status": "error", "error": self._errors.get(group_id, "Not started")}
+                    {"group_id": numeric, "status": "error", "error": self._errors.get(group_id, _NOT_STARTED)}
                 )
         for index in range(0, len(items), _STATUS_BATCH):
             try:
@@ -276,7 +326,10 @@ class CommunityManager:
     async def run(self) -> None:
         """Работает до отмены. Сбой тика не завершает процесс."""
         try:
-            await self.sync()
+            try:
+                await self.sync()
+            except Exception as exc:  # noqa: BLE001 — первый тик не должен завершать процесс
+                print(f"Сбой синхронизации сообществ: {clean(f'{type(exc).__name__}: {exc}')}", flush=True)
             self.ready.set()
             if not self._running:
                 print("Ни одно сообщество пока не запущено, жду CRM и env.", flush=True)
@@ -285,6 +338,6 @@ class CommunityManager:
                 try:
                     await self.sync()
                 except Exception as exc:  # noqa: BLE001
-                    print(f"Сбой синхронизации сообществ: {type(exc).__name__}: {exc}", flush=True)
+                    print(f"Сбой синхронизации сообществ: {clean(f'{type(exc).__name__}: {exc}')}", flush=True)
         finally:
             await asyncio.shield(self.stop_all())
