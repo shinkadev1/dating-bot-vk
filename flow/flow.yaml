@@ -129,7 +129,6 @@ screens:
 
   partner_left_promo:
     title: "Собеседник закончил диалог (промо премиума)"
-    on: partner_left
     text: |-
       Собеседник закончил диалог 😔
 

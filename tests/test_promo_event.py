@@ -101,7 +101,7 @@ class FlowScreensTest(unittest.TestCase):
         screen = flow.get().screen("partner_left_promo")
         self.assertEqual(screen.text, LEFT_TEXT)
         self.assertEqual(screen.image, "images/premium.png")
-        self.assertEqual(screen.on, "partner_left")
+        self.assertIsNone(screen.on)
         buttons = _buttons(screen)
         self.assertEqual(len(buttons), 3)
         self.assertEqual(buttons[0].url, "{premium_url}")
