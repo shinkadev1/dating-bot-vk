@@ -62,7 +62,7 @@ class ChatApiClient:
             raise ChatApiError(f"{method} {path}: {type(exc).__name__}: {exc}") from exc
         if response.status_code == httpx.codes.CONFLICT:
             raise NotChattingError(response.text)
-        if response.status_code == httpx.codes.FORBIDDEN and (action == "search" or "премиум" in response.text.casefold()):
+        if response.status_code == httpx.codes.FORBIDDEN and "премиум" in response.text.casefold():
             raise NotPremiumError(response.text)
         if response.is_error:
             raise ChatApiError(f"{method} {path}: HTTP {response.status_code} {response.text}")

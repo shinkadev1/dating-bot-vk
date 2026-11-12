@@ -48,9 +48,15 @@ class SearchBodyTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(json.loads(seen[0].content), {"mode": "adult"})
 
     async def test_adult_search_403_is_not_premium(self) -> None:
-        client = _client(lambda request: httpx.Response(403, json={"detail": "Нужен премиум"}))
+        client = _client(lambda request: httpx.Response(403, json={"detail": "Пошлый чат доступен только с премиумом"}))
         with self.assertRaises(NotPremiumError):
             await client.search(PEER, "adult")
+
+    async def test_403_without_premium_word_is_plain_error(self) -> None:
+        client = _client(lambda request: httpx.Response(403, json={"detail": "Forbidden"}))
+        with self.assertRaises(ChatApiError) as ctx:
+            await client.search(PEER, "adult")
+        self.assertNotIsInstance(ctx.exception, NotPremiumError)
 
     async def test_other_errors_stay_chat_api_errors(self) -> None:
         client = _client(lambda request: httpx.Response(500, text="boom"))
