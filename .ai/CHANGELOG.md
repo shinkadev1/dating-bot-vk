@@ -2,7 +2,7 @@
 
 ## 2026-11-12 — промо премиума каждые 10 диалогов (ветка loop/promo-every-10, не выкачено)
 
-Новое событие Chat API `promo` в `app/events.py` и экран `premium_promo` во `flow/flow.yaml` (текст, `images/premium.png`, кнопки «Купить премиум» с личной ссылкой и «Новый собеседник»). При активном премиуме событие пропускается; недоставка не вызывает `delivery_failed`. Тесты: `tests/test_promo_event.py`. Зависит от отправки события в vk-bot (не выкачено, живой VK не проверен).
+Контракт Chat API: событие `partner_left` может содержать `promo: true`, ответ `POST /stop` — `promo: true` (по умолчанию false); отдельного события promo нет. `api_client.stop()` возвращает `StopResult(was_active, promo)`. Без активного премиума бот показывает экраны `partner_left_promo` и `stopped_promo` (`flow/flow.yaml`, `images/premium.png`, кнопки «Купить премиум» с личной ссылкой, «Новый собеседник», в первом ещё «Пожаловаться»); при премиуме и без флага поведение прежнее. Экран `premium_promo` удалён. Тесты: `tests/test_promo_event.py`. Зависит от vk-bot (не выкачено, выкатывается после ботов; живой VK не проверен).
 
 ## 2026-11-11 — flow/flow.yaml
 

@@ -119,9 +119,14 @@ def _is_report(text: str, payload: dict) -> bool:
 
 async def stop_active(peer: Peer) -> None:
     """Заканчивает поиск или диалог и ставит «Начать» под текстом."""
+    promo = False
     if await chat_api.phase(peer) != "idle":
-        await chat_api.stop(peer)
+        result = await chat_api.stop(peer)
+        promo = result.promo and not (await premium_offer(peer, fresh=True)).active
     cancel_search_timeout(peer)
+    if promo:
+        await gateway.send_screen(peer, "stopped_promo")
+        return
     await gateway.send(peer, STOPPED_TEXT, "main")
 
 

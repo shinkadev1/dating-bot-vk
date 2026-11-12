@@ -189,7 +189,7 @@ def _make_api(phase: str, mode: str) -> MagicMock:
     api.visit = AsyncMock()
     api.phase = AsyncMock(return_value=phase)
     api.search = AsyncMock(return_value="chatting" if mode == "B" else "searching")
-    api.stop = AsyncMock(return_value=True)
+    api.stop = AsyncMock(return_value=SimpleNamespace(was_active=True, promo=False))
     api.report = AsyncMock(return_value="chatting" if mode == "B" else "searching")
     api.send_message = AsyncMock(return_value=SimpleNamespace(delivered=mode != "F"))
     api.delivery_failed = AsyncMock()

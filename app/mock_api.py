@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from app.api_client import SendResult
+from app.api_client import SendResult, StopResult
 from app.peer import Peer
 from app.ui import PREMIUM_URL
 
@@ -35,10 +35,10 @@ class MockChatApi:
         self._phase[peer] = "chatting"
         return "chatting"
 
-    async def stop(self, peer: Peer) -> bool:
+    async def stop(self, peer: Peer) -> StopResult:
         was_active = self._phase_of(peer) != "idle"
         self._phase[peer] = "idle"
-        return was_active
+        return StopResult(was_active, False)
 
     async def report(self, peer: Peer) -> str:
         """Жалоба в диалоге оставляет комнату, чтобы снова показать её клавиатуру."""

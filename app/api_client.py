@@ -37,6 +37,12 @@ class SendResult:
     phase: str
 
 
+@dataclass(frozen=True)
+class StopResult:
+    was_active: bool
+    promo: bool
+
+
 class ChatApiClient:
     def __init__(self, base_url: str, token: str, *, timeout: float = 10.0) -> None:
         self._http = httpx.AsyncClient(
@@ -85,9 +91,10 @@ class ChatApiClient:
         """Ставит в поиск. Возвращает chatting, если пара нашлась сразу."""
         return (await self._request("POST", peer, "search"))["phase"]
 
-    async def stop(self, peer: Peer) -> bool:
-        """True, если был поиск или диалог."""
-        return (await self._request("POST", peer, "stop"))["was_active"]
+    async def stop(self, peer: Peer) -> StopResult:
+        """was_active: был поиск или диалог; promo: Chat API просит показать промо премиума."""
+        body = await self._request("POST", peer, "stop")
+        return StopResult(body["was_active"], bool(body.get("promo", False)))
 
     async def report(self, peer: Peer) -> str:
         """Закрывает диалог с пометкой жалобы и ставит в поиск. Возвращает новую фазу."""

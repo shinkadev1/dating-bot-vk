@@ -2,7 +2,7 @@
 
 ## Промо каждые 10 диалогов, 2026-11-12
 
-Ветка `loop/promo-every-10`: событие `promo` и экран `premium_promo` реализованы, `python -m app.flow` и 92 теста проходят. Не выкачено; Chat API пока не шлёт `promo`; живой VK не проверен.
+Ветка `loop/promo-every-10`: флаг `promo` в `partner_left` и `POST /stop`, экраны `partner_left_promo` и `stopped_promo` реализованы, `python -m app.flow` и 98 тестов проходят. Не выкачено; Chat API пока не шлёт флаг; живой VK не проверен.
 
 ## Оркестрация Codex, 2026-10-31
 
