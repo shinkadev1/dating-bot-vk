@@ -26,7 +26,7 @@ SNAPSHOT = json.loads((Path(__file__).parent / "fixtures" / "ui_snapshot.json").
 # теперь любое действие из реестра ACTIONS выполняется по имени из payload (см. ButtonActionTests).
 CHANGED_BUTTONS = {
     f"cmd:{command}|{phase}|{mode}|{as_text}"
-    for command in ("dating_rooms", "dating_settings", "next")
+    for command in ("dating_find", "dating_rooms", "dating_settings", "next")
     for phase in ("idle", "searching", "chatting")
     for mode in ("A", "B", "C", "E")
     for as_text in (0, 1)

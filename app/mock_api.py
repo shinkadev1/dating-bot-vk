@@ -30,7 +30,7 @@ class MockChatApi:
     async def phase(self, peer: Peer) -> str:
         return self._phase_of(peer)
 
-    async def search(self, peer: Peer) -> str:
+    async def search(self, peer: Peer, mode: str | None = None) -> str:
         """Сразу «комната найдена»: клавиатура диалога появляется без очереди."""
         self._phase[peer] = "chatting"
         return "chatting"

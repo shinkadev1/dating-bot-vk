@@ -27566,7 +27566,17 @@
    ]
   },
   "payload:dating_find||chatting|0|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27574,31 +27584,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||chatting|0|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27606,31 +27625,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||chatting|0|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27638,22 +27657,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find||chatting|1|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27661,31 +27689,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||chatting|1|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27693,31 +27730,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||chatting|1|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27725,22 +27762,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find||idle|0|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27748,31 +27794,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||idle|0|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27780,31 +27835,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||idle|0|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27812,22 +27867,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find||idle|1|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27835,31 +27899,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||idle|1|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27867,31 +27940,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||idle|1|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27899,22 +27972,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find||searching|0|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27922,31 +28004,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||searching|0|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27954,31 +28045,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||searching|0|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -27986,22 +28077,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find||searching|1|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28009,63 +28109,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find||searching|1|B": {
-   "age_after": null,
-   "api": [
-    [
-     "visit",
-     [
-      "PEER"
-     ],
-     {}
-    ]
-   ],
-   "awaiting_after": false,
    "gateway": [
     [
      "send",
      [
       "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
+      "🔎 Ищем собеседника...",
+      "line"
      ],
      {}
     ],
     [
-     "send_premium",
+     "send",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
      ],
      {}
     ]
-   ]
-  },
-  "payload:dating_find||searching|1|C": {
-   "age_after": null,
+   ],
    "api": [
     [
      "visit",
@@ -28073,19 +28150,50 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
+  },
+  "payload:dating_find||searching|1|C": {
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
+   "api": [
+    [
+     "visit",
+     [
+      "PEER"
+     ],
+     {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
+    ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find|Начать|chatting|0|A": {
    "age_after": null,
@@ -28700,7 +28808,17 @@
    ]
   },
   "payload:dating_find|привет|chatting|0|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28708,31 +28826,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|chatting|0|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28740,31 +28867,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|chatting|0|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28772,22 +28899,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find|привет|chatting|1|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28795,31 +28931,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|chatting|1|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28827,31 +28972,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|chatting|1|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28859,22 +29004,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find|привет|idle|0|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28882,31 +29036,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|idle|0|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28914,31 +29077,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|idle|0|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28946,22 +29109,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find|привет|idle|1|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -28969,31 +29141,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|idle|1|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -29001,31 +29182,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|idle|1|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -29033,22 +29214,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find|привет|searching|0|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -29056,31 +29246,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|searching|0|B": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -29088,31 +29287,31 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|searching|0|C": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -29120,22 +29319,31 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_find|привет|searching|1|A": {
-   "age_after": null,
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
    "api": [
     [
      "visit",
@@ -29143,63 +29351,40 @@
       "PEER"
      ],
      {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
     ]
    ],
    "awaiting_after": false,
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
-     ],
-     {}
-    ],
-    [
-     "send_premium",
-     [
-      "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
-     ],
-     {}
-    ]
-   ]
+   "age_after": null
   },
   "payload:dating_find|привет|searching|1|B": {
-   "age_after": null,
-   "api": [
-    [
-     "visit",
-     [
-      "PEER"
-     ],
-     {}
-    ]
-   ],
-   "awaiting_after": false,
    "gateway": [
     [
      "send",
      [
       "PEER",
-      "👑 Для продолжения нужен Премиум",
-      "dating"
+      "🔎 Ищем собеседника...",
+      "line"
      ],
      {}
     ],
     [
-     "send_premium",
+     "send",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=False, until=None)"
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
      ],
      {}
     ]
-   ]
-  },
-  "payload:dating_find|привет|searching|1|C": {
-   "age_after": null,
+   ],
    "api": [
     [
      "visit",
@@ -29207,19 +29392,50 @@
       "PEER"
      ],
      {}
-    ]
-   ],
-   "awaiting_after": false,
-   "gateway": [
+    ],
     [
-     "send_premium",
+     "search",
      [
       "PEER",
-      "PremiumOffer(url='https://pay.example/x?a=1&plan=z', active=True, until=datetime.datetime(2026, 12, 1, 22, 0, tzinfo=datetime.timezone.utc))"
+      "adult"
      ],
      {}
     ]
-   ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
+  },
+  "payload:dating_find|привет|searching|1|C": {
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ],
+   "api": [
+    [
+     "visit",
+     [
+      "PEER"
+     ],
+     {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
+    ]
+   ],
+   "awaiting_after": false,
+   "age_after": null
   },
   "payload:dating_rooms||chatting|0|A": {
    "age_after": null,

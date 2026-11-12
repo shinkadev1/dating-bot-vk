@@ -212,6 +212,7 @@ async def _settle(h) -> None:
         task.cancel()
     await asyncio.gather(*h._search_timeouts.values(), return_exceptions=True)
     h._search_timeouts.clear()
+    h._search_modes.clear()
 
 
 async def _run_incoming(

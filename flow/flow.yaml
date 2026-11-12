@@ -62,7 +62,8 @@ screens:
       - - text: "🔥 Пошлый чат"
           action: dating_find
           style: primary
-          next: premium
+          # Поиск в режиме adult: успех — экран поиска chat; 403 (нет премиума) — экран premium.
+          next: chat
         - text: "📍 Выбрать город"
           action: dating_rooms
           style: primary

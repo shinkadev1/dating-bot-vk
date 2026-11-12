@@ -62,6 +62,8 @@ class ChatApiClient:
             raise ChatApiError(f"{method} {path}: {type(exc).__name__}: {exc}") from exc
         if response.status_code == httpx.codes.CONFLICT:
             raise NotChattingError(response.text)
+        if response.status_code == httpx.codes.FORBIDDEN and (action == "search" or "премиум" in response.text.casefold()):
+            raise NotPremiumError(response.text)
         if response.is_error:
             raise ChatApiError(f"{method} {path}: HTTP {response.status_code} {response.text}")
         if response.status_code == httpx.codes.NO_CONTENT:
@@ -87,9 +89,14 @@ class ChatApiClient:
     async def phase(self, peer: Peer) -> str:
         return (await self._request("GET", peer, "state"))["phase"]
 
-    async def search(self, peer: Peer) -> str:
-        """Ставит в поиск. Возвращает chatting, если пара нашлась сразу."""
-        return (await self._request("POST", peer, "search"))["phase"]
+    async def search(self, peer: Peer, mode: str | None = None) -> str:
+        """Ставит в поиск. Возвращает chatting, если пара нашлась сразу.
+
+        mode="adult" — «Пошлый чат»: без премиума Chat API отвечает 403 (NotPremiumError).
+        Без mode тело запроса не отправляется.
+        """
+        body = {"mode": mode} if mode else None
+        return (await self._request("POST", peer, "search", body))["phase"]
 
     async def stop(self, peer: Peer) -> StopResult:
         """was_active: был поиск или диалог; promo: Chat API просит показать промо премиума."""
