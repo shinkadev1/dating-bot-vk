@@ -140,7 +140,7 @@ screens:
       Пробный период — 1 ₽.
     image: "images/premium.png"
     keyboard: inline
-    # Вместо partner_left, когда Chat API пометил событие promo (каждый 10-й завершённый диалог)
+    # Вместо partner_left, когда Chat API пометил событие promo (5-й, 15-й, 25-й… завершённый диалог)
     # и премиума нет. Ссылка оплаты личная, подставляется кодом вместо {premium_url} (как у chat).
     buttons:
       - - text: "💎 Купить премиум"

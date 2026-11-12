@@ -55,7 +55,7 @@ async def _deliver(body: dict) -> None:
         if body.get("reason") == "undeliverable":
             sent = await gateway.send(peer, UNDELIVERED_TEXT, "main")
         elif body.get("promo") and not (await premium_offer(peer, fresh=True)).active:
-            # Каждый 10-й завершённый диалог без премиума: тот же уход, но с промо премиума.
+            # 5-й, 15-й, 25-й… завершённый диалог без премиума: тот же уход, но с промо премиума.
             sent = await gateway.send_screen(peer, "partner_left_promo")
         else:
             sent = await gateway.send(peer, PARTNER_LEFT_TEXT, "partner_left")
