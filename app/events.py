@@ -17,11 +17,12 @@ from app.config import CHAT_API_URL, EVENTS_CONSUMER, chat_api_headers
 from app.gateway import gateway
 from app.handlers import cancel_search_timeout
 from app.peer import Peer
+from app.premium import premium_offer
 from app.ui import FOUND_TEXT, PARTNER_LEFT_TEXT, UNDELIVERED_TEXT, format_partner
 
 # События Chat API, которые бот показывает пользователю. Каждое описано экраном с on: во flow.yaml
 # (message и media доставляют реплики и файлы собеседника без отдельного экрана).
-EVENTS = frozenset({"partner_found", "partner_left", "undeliverable", "notice"})
+EVENTS = frozenset({"partner_found", "partner_left", "undeliverable", "notice", "promo"})
 
 _RECONNECT_DELAY_SECONDS = 3.0
 # Живые реплики идут тем же токеном сообщества. 10 сообщений/с оставляют запас под диалоги.
@@ -56,6 +57,15 @@ async def _deliver(body: dict) -> None:
         else:
             sent = await gateway.send(peer, PARTNER_LEFT_TEXT, "partner_left")
         print(f"Уход собеседника {peer}: {'доставлено' if sent else 'не доставлено'}", flush=True)
+        return
+    elif kind == "promo":
+        # Промо не диалоговое событие: недоставка не закрывает пару и не трогает поиск.
+        offer = await premium_offer(peer)
+        if offer.active:
+            print(f"Промо премиума {peer}: премиум активен, пропущено", flush=True)
+            return
+        sent = await gateway.send_screen(peer, "premium_promo")
+        print(f"Промо премиума {peer}: {'доставлено' if sent else 'не доставлено'}", flush=True)
         return
     else:
         print(f"Неизвестное событие Chat API: {kind}", flush=True)

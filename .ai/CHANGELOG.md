@@ -1,5 +1,9 @@
 # История важных изменений
 
+## 2026-11-12 — промо премиума каждые 10 диалогов (ветка loop/promo-every-10, не выкачено)
+
+Новое событие Chat API `promo` в `app/events.py` и экран `premium_promo` во `flow/flow.yaml` (текст, `images/premium.png`, кнопки «Купить премиум» с личной ссылкой и «Новый собеседник»). При активном премиуме событие пропускается; недоставка не вызывает `delivery_failed`. Тесты: `tests/test_promo_event.py`. Зависит от отправки события в vk-bot (не выкачено, живой VK не проверен).
+
 ## 2026-11-11 — flow/flow.yaml
 
 Пользовательские тексты, кнопки, клавиатуры, цвета, картинки, переходы и тосты бота переехали в `flow/flow.yaml` (+ `flow/flow.schema.json`, `flow/images`): CRM «Постдеск» читает и правит файл в GitHub и рисует карту бота. Поведение для пользователя не менялось: эквивалентность подтверждена снимком кода до перехода (`tests/fixtures/ui_snapshot.json`). Единственное отличие: нажатия inline-кнопок с действиями `dating_rooms`, `dating_settings`, `next`, которые раньше молча игнорировались (таких кнопок нет), теперь выполняются по имени action. Новое: `app/flow.py` (загрузка, схема, лимиты ВК, сверка с реестрами `ACTIONS`/`HANDLERS`/`EVENTS` при старте, проверка полей шаблонов), общий рендер экранов goto/next без кода, тест «нет пользовательских литералов в коде», job `validate` в CI, проверка `RestartCount` в `deploy/update.sh`. Файлы: `app/flow.py`, `app/ui.py`, `app/handlers.py`, `app/gateway.py`, `app/events.py`, `app/main.py`, `flow/`, `tests/`, `Dockerfile`, `requirements.txt`, `.github/workflows/deploy.yml`, `deploy/update.sh`. Проверки: `python -m app.flow`, `python -m unittest discover -s tests -v`. Не проверено: docker build, деплой, живой VK.

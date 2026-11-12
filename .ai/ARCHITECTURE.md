@@ -19,7 +19,7 @@ VK Long Poll → handlers → REST Chat API. Обратная доставка: 
 | `app/gateway.py` | Доставка текста, баннеров и медиа. |
 | `app/api_client.py` | REST Chat API. |
 | `app/premium.py` | Личная ссылка оплаты премиума и его срок, кэш на пользователя. |
-| `app/events.py` | WebSocket событий и рассылок с ack; реестр `EVENTS`. |
+| `app/events.py` | WebSocket событий и рассылок с ack; реестр `EVENTS`. Событие `promo` (каждый 10-й завершённый диалог без премиума, приходит из Chat API) → экран `premium_promo` с личной ссылкой; при активном премиуме пропускается, недоставка не закрывает диалог. |
 | `app/media.py` | Обработка файлов. |
 | `app/mock_api.py` | Заглушка Chat API. |
 | `worker/src/` | Callback API Worker для заявок в сообщество. |
