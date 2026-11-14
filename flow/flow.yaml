@@ -207,6 +207,25 @@ screens:
       x: 960
       y: 540
 
+  # Ежедневная рассылка, чередуется по дням с daily_promo (выбор дня — в Chat API), notice с полем screen: daily_hello.
+  daily_hello:
+    title: "Ежедневная рассылка (вечер): «Привет»"
+    text: "Давай начнем с простого «Привет» и посмотрим, куда это нас приведет ☕✨"
+    keyboard: inline
+    # Текст кнопки в ВК — ещё и текстовая команда: голое «Давай» в переписке запускало бы поиск, поэтому с эмодзи.
+    buttons:
+      - - text: "👋 Давай"
+          action: start
+          style: primary
+          next: chat
+      - - text: "💎 Премиум"
+          url: "{premium_url}"
+          style: success
+          next: premium
+    pos:
+      x: 960
+      y: 720
+
   photo_locked:
     title: "Фото собеседника (без премиума)"
     text: "🔒 Просмотр фото доступен только с премиумом"

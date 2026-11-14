@@ -1,5 +1,9 @@
 # История важных изменений
 
+## 2026-11-14 — экран рассылки `daily_hello` (задача 59046)
+
+«Давай начнем с простого «Привет»…», кнопки «👋 Давай» (поиск) и «💎 Премиум». Chat API шлёт его через день вместо `daily_promo`.
+
 ## 2026-11-12 — сообщества ВК из CRM (ветка loop/vk-communities-crm, не выкачено)
 
 Контракт Chat API: `GET /channels/vk/tokens` -> `{communities:[{group_id,title,token}], disabled:[group_id]}`, `POST /channels/vk/import {group_id,title,token}` -> `{stored}`, `POST /channels/vk/status {items:[{group_id,status,error}]}` -> 204. `CommunityManager` держит желаемый набор = сообщества CRM ∪ env-токены, которых нет в CRM и среди отключённых; раз в `COMMUNITIES_SYNC_SECONDS` (60) запускает новые, останавливает отключённые (polling.stop, cancel, gateway.remove, закрытие HTTP-клиента), перезапускает при смене токена, повторяет упавший preflight (в потоке) и шлёт статусы. 404/503/сбой сети — работа на env-токенах. Бот не выходит без токенов; `deploy/update.sh` без VK_TOKEN предупреждает, а не падает. Пользовательские тексты и flow не менялись. Тесты: `tests/test_communities.py`.

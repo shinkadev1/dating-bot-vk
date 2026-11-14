@@ -65,6 +65,18 @@ class DailyScreenTest(unittest.TestCase):
         self.assertIsNotNone(buttons[1].url)
         self.assertTrue(ui.uses_premium_link("daily_promo"))
 
+    def test_hello_screen_shape(self):
+        screen = flow.get().screen("daily_hello")
+        self.assertEqual(screen.keyboard, "inline")
+        self.assertIsNone(screen.image)
+        self.assertIsNone(screen.on)
+        buttons = _buttons(screen)
+        self.assertEqual([b.text for b in buttons], ["👋 Давай", "💎 Премиум"])
+        self.assertIsNone(flow.get().action_for("давай"))
+        self.assertEqual(buttons[0].action, "start")
+        self.assertIsNotNone(buttons[1].url)
+        self.assertTrue(ui.uses_premium_link("daily_hello"))
+
     def test_start_button_runs_search(self):
         runner = handlers._button_runner("start", {})
         self.assertIs(runner, handlers.connect_with_partner)

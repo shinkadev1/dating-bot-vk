@@ -1,5 +1,9 @@
 # Состояние dating-bot-vk
 
+## Вторая ежедневная рассылка «Привет», 2026-11-14 (задача 59046)
+
+Бот VK: экран `daily_hello` во flow.yaml (inline «👋 Давай» → start, «💎 Премиум» → ссылка оплаты), тесты. Кнопка с эмодзи намеренно: в ВК текст кнопки — ещё и текстовая команда, голое «давай» в переписке запускало бы новый поиск. Проверки: `python -m app.flow` ok, `python -m unittest discover -s tests` — 141 OK. Подробности — [tasks/59046.md](tasks/59046.md).
+
 ## Сообщества из CRM, 2026-11-12
 
 Ветка `loop/vk-communities-crm`: `app/communities.py` (CommunityManager), клиент `vk_communities`/`import_vk_community`/`report_vk_status`, `gateway.remove`, `COMMUNITIES_SYNC_SECONDS`; `deploy/update.sh` без VK_TOKEN только предупреждает. `python -m app.flow` и 129 тестов проходят (12 новых в `tests/test_communities.py`, на заглушках). Не выкачено; зависит от маршрутов Chat API vk-bot (выпускается первым); живой VK и реальный Chat API не проверены.
