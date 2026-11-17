@@ -79,7 +79,7 @@ class DailyScreenTest(unittest.TestCase):
 
     def test_start_button_runs_search(self):
         runner = handlers._button_runner("start", {})
-        self.assertIs(runner, handlers.connect_with_partner)
+        self.assertIs(runner, handlers._start_search)
 
 
 if __name__ == "__main__":
