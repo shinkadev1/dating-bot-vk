@@ -162,6 +162,26 @@ class DatingFindTests(unittest.IsolatedAsyncioTestCase):
         texts = [c.args[1] for c in self.gw.send.await_args_list]
         self.assertEqual(texts, [h.NORMAL_NOTICE_TEXT, h.SEARCHING_TEXT])
 
+    async def test_normal_chat_survives_partner_already_left(self) -> None:
+        from app.api_client import NotChattingError
+
+        await h.handle_dating_find(PEER)
+        self.api.phase.return_value = "chatting"
+        self.api.stop = AsyncMock(side_effect=NotChattingError("gone"))
+        self.api.search.reset_mock()
+        await h.handle_normal_chat(PEER)
+        self.api.search.assert_awaited_once_with(PEER)
+
+    async def test_normal_chat_no_notice_if_search_fails(self) -> None:
+        await h.handle_dating_find(PEER)
+        self.api.stop = AsyncMock()
+        self.api.phase.return_value = "chatting"
+        self.api.search.side_effect = ChatApiError("down")
+        self.gw.send.reset_mock()
+        with self.assertRaises(ChatApiError):
+            await h.handle_normal_chat(PEER)
+        self.gw.send.assert_not_awaited()
+
     async def test_normal_chat_while_searching_switches_search(self) -> None:
         await h.handle_dating_find(PEER)
         self.api.phase.return_value = "searching"

@@ -574,11 +574,13 @@ async def handle_normal_chat(peer: Peer) -> None:
             await connect_with_partner(peer)
         return
     if phase != "idle":
-        await chat_api.stop(peer)
+        try:
+            await chat_api.stop(peer)
+        except NotChattingError:
+            pass  # собеседник успел уйти: просто ищем дальше
     cancel_search_timeout(peer)
     _search_modes.pop(peer, None)
-    await gateway.send(peer, NORMAL_NOTICE_TEXT, "line")
-    await connect_with_partner(peer)
+    await connect_with_partner(peer, None, NORMAL_NOTICE_TEXT)
 
 
 async def handle_dating(peer: Peer) -> None:
