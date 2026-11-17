@@ -22,6 +22,9 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 Тот же режим без Compose: `DEV_MODE=True` в `.env` и `python -m app.main`.
+Сообщества ВК бот берёт из двух источников: из CRM (Chat API, `GET /channels/vk/tokens`) и из токенов `VK_TOKEN`/`VK_TOKENS`.
+Токены из env бот при старте передаёт в CRM (`POST /channels/vk/import`, существующие не перезаписываются). Раз в `COMMUNITIES_SYNC_SECONDS` (по умолчанию 60) он сверяется с CRM: запускает новые сообщества, останавливает отключённые, перезапускает при замене токена и отправляет статус (`POST /channels/vk/status`). Токен из env, чьего сообщества нет в CRM и среди отключённых, продолжает работать. Если Chat API недоступен или старый (404/503), бот работает на env-токенах. Без токенов в env бот не падает и ждёт сообщества из CRM.
+
 Long Poll ВК один на токен сообщества. Пока прод-контейнер слушает основное сообщество,
 в локальный запуск нужен другой токен, иначе события уйдут локальному процессу.
 
@@ -50,4 +53,4 @@ Push в `master` собирает образ `dating-bot` и перезапус�
 - `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
 - `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` — SSH на сервер бота
 - `DEPLOY_PATH` — каталог бота, по умолчанию `~/dating-bot-vk`
-- `ENV_FILE` — `VK_TOKEN`, `CHAT_API_SERVICE_TOKEN`, `CHAT_API_URL`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`
+- `ENV_FILE` — `VK_TOKEN` (необязателен: без него деплой только предупреждает), `CHAT_API_SERVICE_TOKEN`, `CHAT_API_URL`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`

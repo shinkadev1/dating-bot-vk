@@ -36,3 +36,15 @@ def chat_api_headers(token: str | None = None) -> dict[str, str]:
         headers["CF-Access-Client-Id"] = CF_ACCESS_CLIENT_ID
         headers["CF-Access-Client-Secret"] = CF_ACCESS_CLIENT_SECRET
     return headers
+
+
+def _positive_float(name: str, default: float) -> float:
+    try:
+        value = float((os.getenv(name) or "").strip() or default)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+# Как часто бот сверяет список сообществ с CRM и отправляет статус, секунды.
+COMMUNITIES_SYNC_SECONDS = _positive_float("COMMUNITIES_SYNC_SECONDS", 60.0)

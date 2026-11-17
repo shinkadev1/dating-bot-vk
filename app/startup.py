@@ -25,6 +25,16 @@ def rebuild_vkbottle_response_models() -> None:
         model.model_rebuild(_types_namespace=types_namespace)
 
 
+class PreflightError(SystemExit):
+    """Отказ проверки токена. kind: "key" (токен не подошёл) или "longpoll"; code и vk_message — ответ ВК."""
+
+    def __init__(self, text: str, *, kind: str, code: object, vk_message: str) -> None:
+        super().__init__(text)
+        self.kind = kind
+        self.code = code
+        self.vk_message = vk_message
+
+
 def preflight_check(token: str) -> tuple[int, str]:
     """Проверяет доступ к Long Poll до запуска бота. Возвращает id и название сообщества."""
     response = requests.get(
@@ -35,10 +45,13 @@ def preflight_check(token: str) -> tuple[int, str]:
 
     if "error" in response:
         err = response["error"]
-        raise SystemExit(
+        raise PreflightError(
             f"Токен невалиден или это не ключ сообщества.\n"
             f"VK Error [{err.get('error_code')}]: {err.get('error_msg')}\n"
-            f"Возьмите ключ: Управление сообществом → Работа с API → Ключи доступа"
+            f"Возьмите ключ: Управление сообществом → Работа с API → Ключи доступа",
+            kind="key",
+            code=err.get("error_code"),
+            vk_message=str(err.get("error_msg") or ""),
         )
 
     raw = response["response"]
@@ -53,7 +66,7 @@ def preflight_check(token: str) -> tuple[int, str]:
 
     if "error" in lp:
         err = lp["error"]
-        raise SystemExit(
+        raise PreflightError(
             f"Нет доступа к Long Poll (это и есть Error 15 / 1133).\n"
             f"Сообщество: {group.get('name')} (id={group_id})\n"
             f"VK Error [{err.get('error_code')}] subcode={err.get('error_subcode')}: "
@@ -65,7 +78,10 @@ def preflight_check(token: str) -> tuple[int, str]:
             f"  3. Ключи доступа → НОВЫЙ ключ с правами:\n"
             f"       • Сообщения сообщества\n"
             f"       • Управление сообществом\n"
-            f"  4. Вставьте новый ключ в .env без кавычек"
+            f"  4. Вставьте новый ключ в .env без кавычек",
+            kind="longpoll",
+            code=err.get("error_code"),
+            vk_message=str(err.get("error_msg") or ""),
         )
 
     ensure_incoming_events(token, group_id)
