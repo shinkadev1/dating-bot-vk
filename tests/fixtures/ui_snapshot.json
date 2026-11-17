@@ -27566,17 +27566,7 @@
    ]
   },
   "payload:dating_find||chatting|0|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27595,29 +27585,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||chatting|0|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27636,20 +27626,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||chatting|0|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27668,20 +27676,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||chatting|1|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27700,29 +27717,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||chatting|1|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27741,20 +27758,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||chatting|1|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27773,20 +27808,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||idle|0|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27805,29 +27849,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||idle|0|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27846,20 +27890,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||idle|0|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27878,20 +27940,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||idle|1|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27910,29 +27981,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||idle|1|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27951,20 +28022,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||idle|1|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -27983,20 +28072,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||searching|0|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28015,29 +28113,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||searching|0|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28056,20 +28154,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||searching|0|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28088,20 +28204,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||searching|1|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28120,10 +28245,57 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find||searching|1|B": {
+   "age_after": null,
+   "api": [
+    [
+     "visit",
+     [
+      "PEER"
+     ],
+     {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
+    ]
+   ],
+   "awaiting_after": false,
    "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
     [
      "send",
      [
@@ -28142,7 +28314,10 @@
      ],
      {}
     ]
-   ],
+   ]
+  },
+  "payload:dating_find||searching|1|C": {
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28161,10 +28336,16 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
-  },
-  "payload:dating_find||searching|1|C": {
    "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
     [
      "send",
      [
@@ -28174,26 +28355,7 @@
      ],
      {}
     ]
-   ],
-   "api": [
-    [
-     "visit",
-     [
-      "PEER"
-     ],
-     {}
-    ],
-    [
-     "search",
-     [
-      "PEER",
-      "adult"
-     ],
-     {}
-    ]
-   ],
-   "awaiting_after": false,
-   "age_after": null
+   ]
   },
   "payload:dating_find|Начать|chatting|0|A": {
    "age_after": null,
@@ -28808,17 +28970,7 @@
    ]
   },
   "payload:dating_find|привет|chatting|0|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28837,29 +28989,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|chatting|0|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28878,20 +29030,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|chatting|0|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28910,20 +29080,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|chatting|1|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28942,29 +29121,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|chatting|1|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -28983,20 +29162,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|chatting|1|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29015,20 +29212,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|idle|0|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29047,29 +29253,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|idle|0|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29088,20 +29294,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|idle|0|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29120,20 +29344,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|idle|1|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29152,29 +29385,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|idle|1|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29193,20 +29426,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|idle|1|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29225,20 +29476,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|searching|0|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29257,29 +29517,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|searching|0|B": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ],
-    [
-     "send",
-     [
-      "PEER",
-      "Комната 💬 найдена. Общайтесь!",
-      "chat"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29298,20 +29558,38 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "Комната 💬 найдена. Общайтесь!",
+      "chat"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|searching|0|C": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29330,20 +29608,29 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|searching|1|A": {
-   "gateway": [
-    [
-     "send",
-     [
-      "PEER",
-      "🔎 Ищем собеседника...",
-      "line"
-     ],
-     {}
-    ]
-   ],
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29362,10 +29649,57 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
+   "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
+    [
+     "send",
+     [
+      "PEER",
+      "🔎 Ищем собеседника...",
+      "line"
+     ],
+     {}
+    ]
+   ]
   },
   "payload:dating_find|привет|searching|1|B": {
+   "age_after": null,
+   "api": [
+    [
+     "visit",
+     [
+      "PEER"
+     ],
+     {}
+    ],
+    [
+     "search",
+     [
+      "PEER",
+      "adult"
+     ],
+     {}
+    ]
+   ],
+   "awaiting_after": false,
    "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
     [
      "send",
      [
@@ -29384,7 +29718,10 @@
      ],
      {}
     ]
-   ],
+   ]
+  },
+  "payload:dating_find|привет|searching|1|C": {
+   "age_after": null,
    "api": [
     [
      "visit",
@@ -29403,10 +29740,16 @@
     ]
    ],
    "awaiting_after": false,
-   "age_after": null
-  },
-  "payload:dating_find|привет|searching|1|C": {
    "gateway": [
+    [
+     "send",
+     [
+      "PEER",
+      "😈 Ты вошел в режим пошлого чата\n\nЕсли захочешь покинуть его - нажимай кнопку \"💭 Обычный чат\" в меню",
+      "line"
+     ],
+     {}
+    ],
     [
      "send",
      [
@@ -29416,26 +29759,7 @@
      ],
      {}
     ]
-   ],
-   "api": [
-    [
-     "visit",
-     [
-      "PEER"
-     ],
-     {}
-    ],
-    [
-     "search",
-     [
-      "PEER",
-      "adult"
-     ],
-     {}
-    ]
-   ],
-   "awaiting_after": false,
-   "age_after": null
+   ]
   },
   "payload:dating_rooms||chatting|0|A": {
    "age_after": null,

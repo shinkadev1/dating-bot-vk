@@ -9,7 +9,7 @@
 #   success — зелёный, danger — красный.
 # - payload кнопки по умолчанию {"command": "<action>"}, у goto — {"command": "go", "screen": "<экран>"}.
 # - Подпись кнопки до 40 символов, payload до 255.
-# - Нижние кнопки с action dating/dating_find/dating_rooms/dating_settings/main/premium работают по payload;
+# - Нижние кнопки с action dating/dating_find/dating_rooms/dating_settings/main/premium/normal_chat работают по payload;
 #   текстом их набрать нельзя (текст уходит собеседнику). Текстом работают только start, report, stop, next.
 version: 1
 bot: vk
@@ -104,6 +104,58 @@ screens:
     pos:
       x: 320
       y: 180
+
+  main_adult:
+    title: "Нижняя клавиатура пошлого чата (поиск)"
+    # Показывается вместо main, пока пользователь в режиме «Пошлый чат»: вторым рядом кнопка выхода.
+    keyboard: reply
+    buttons:
+      - - text: "🔍 Найти собеседника"
+          action: start
+          style: primary
+          next: chat
+        - text: "💘 Чат знакомств"
+          action: dating
+          style: primary
+          next: dating
+      - - text: "💭 Обычный чат"
+          action: normal_chat
+          style: secondary
+          aliases: ["обычный чат"]
+          next: chat
+      - - text: "👑 Премиум статус"
+          action: premium
+          style: success
+          next: premium
+    pos:
+      x: 0
+      y: 1080
+
+  chat_adult:
+    title: "Диалог в пошлом чате"
+    # Клавиатура диалога в режиме «Пошлый чат»: между «Новым собеседником» и премиумом кнопка «Обычный чат».
+    keyboard: inline
+    buttons:
+      - - text: "🔍 Новый собеседник"
+          action: start
+          style: primary
+          next: chat
+      - - text: "💭 Обычный чат"
+          action: normal_chat
+          style: secondary
+          aliases: ["обычный чат"]
+          next: chat
+      - - text: "💎 Купить премиум"
+          url: "{premium_url}"
+          style: success
+          next: premium
+      - - text: "Остановить диалог"
+          action: stop
+          style: secondary
+          next: start_inline
+    pos:
+      x: 320
+      y: 1080
 
   partner_left:
     title: "Собеседник закончил диалог"
@@ -349,6 +401,11 @@ screens:
 texts:
   start_button_marker: "Нажми кнопку начать"
   searching: "🔎 Ищем собеседника..."
+  adult_notice: |-
+    😈 Ты вошел в режим пошлого чата
+
+    Если захочешь покинуть его - нажимай кнопку "💭 Обычный чат" в меню
+  normal_notice: "💭 Ты вернулся в обычный чат"
   no_partners: "Сейчас собеседников нет, приходите чуть позже 😔"
   stopped: |-
     Найди собеседника прямо сейчас

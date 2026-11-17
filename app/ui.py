@@ -66,12 +66,15 @@ MAIN_MENU_BTN = _flow_button("dating", "main").text
 # Кнопки прежней нижней клавиатуры диалога: бот их больше не показывает, но принимает их текст.
 CHAT_BTN_NEXT = _flow_button("legacy_keys", "next").text
 CHAT_BTN_STOP = _flow_button("legacy_keys", "stop").text
+NORMAL_CHAT_BTN = _flow_button("chat_adult", "normal_chat").text
 NEW_PARTNER_BTN = _flow_button("chat", "start").text
 PREMIUM_BTN = _link_button("chat").text
 STOP_BTN = _flow_button("chat", "stop").text
 REPORT_BTN = _flow_button("partner_left", "report").text
 
 SEARCHING_TEXT = _text("searching")
+ADULT_NOTICE_TEXT = _text("adult_notice")
+NORMAL_NOTICE_TEXT = _text("normal_notice")
 NO_PARTNERS_TEXT = _text("no_partners")
 FOUND_TEXT = _screen_text("chat")
 STOPPED_TEXT = _text("stopped")
@@ -221,9 +224,12 @@ def build_main_keyboard() -> str:
     return build_keyboard("start_inline")
 
 
-def build_bottom_keyboard() -> str:
-    """Нижняя клавиатура лички: поиск собеседника, чат знакомств и премиум."""
-    return build_keyboard("main")
+def build_bottom_keyboard(adult: bool = False) -> str:
+    """Нижняя клавиатура лички: поиск собеседника, чат знакомств и премиум.
+
+    В режиме «Пошлый чат» вторым рядом добавляется «Обычный чат».
+    """
+    return build_keyboard("main_adult" if adult else "main")
 
 
 def build_dating_keyboard() -> str:
@@ -246,9 +252,12 @@ def build_settings_keyboard(selected: str) -> str:
     return build_options("settings", selected)
 
 
-def build_chat_keyboard(offer: PremiumOffer) -> str:
-    """Под текстом «комната найдена»: «Новый собеседник», премиум и «Остановить диалог»."""
-    return build_keyboard("chat", offer=offer)
+def build_chat_keyboard(offer: PremiumOffer, adult: bool = False) -> str:
+    """Под текстом «комната найдена»: «Новый собеседник», премиум и «Остановить диалог».
+
+    В режиме «Пошлый чат» вторым рядом добавляется «Обычный чат».
+    """
+    return build_keyboard("chat_adult" if adult else "chat", offer=offer)
 
 
 def build_partner_left_keyboard() -> str:

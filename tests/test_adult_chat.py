@@ -71,6 +71,7 @@ class DatingFindTests(unittest.IsolatedAsyncioTestCase):
         self.api = MagicMock()
         self.api.search = AsyncMock(return_value="searching")
         self.api.phase = AsyncMock(return_value="idle")
+        self.api.visit = AsyncMock()
         self.gw = MagicMock()
         self.gw.send = AsyncMock()
         self.gw.send_premium = AsyncMock()
@@ -95,20 +96,21 @@ class DatingFindTests(unittest.IsolatedAsyncioTestCase):
         await h.handle_dating_find(PEER)
         self.api.search.assert_awaited_once_with(PEER, "adult")
         self.gw.send_premium.assert_not_awaited()
-        self.assertEqual(self.gw.send.await_args.args[1], h.SEARCHING_TEXT)
+        texts = [call.args[1] for call in self.gw.send.await_args_list]
+        self.assertEqual(texts, [h.ADULT_NOTICE_TEXT, h.SEARCHING_TEXT])
         self.assertEqual(h._search_modes[PEER], "adult")
 
     async def test_adult_match_found_at_once(self) -> None:
         self.api.search.return_value = "chatting"
         await h.handle_dating_find(PEER)
         texts = [call.args[1] for call in self.gw.send.await_args_list]
-        self.assertEqual(texts, [h.SEARCHING_TEXT, h.FOUND_TEXT])
+        self.assertEqual(texts, [h.ADULT_NOTICE_TEXT, h.SEARCHING_TEXT, h.FOUND_TEXT])
 
     async def test_no_premium_shows_premium_screen(self) -> None:
         self.api.search.side_effect = NotPremiumError("Нужен премиум")
         await h.handle_dating_find(PEER)
         self.gw.send_premium.assert_awaited_once()
-        self.assertEqual(self.gw.send.await_args.args[1], h.DATING_TEXT)
+        self.assertEqual([c.args[1] for c in self.gw.send.await_args_list], [h.DATING_TEXT])
         self.assertNotIn(PEER, h._search_modes)
         self.assertEqual(h._search_timeouts, {})
 
@@ -139,6 +141,87 @@ class DatingFindTests(unittest.IsolatedAsyncioTestCase):
         await h.handle_next(PEER, h.CHAT_BTN_NEXT, False)
         self.gw.send_premium.assert_awaited_once()
         self.assertNotIn(PEER, h._search_modes)
+
+    async def test_notice_only_on_adult_entry_not_on_next(self) -> None:
+        await h.handle_dating_find(PEER)
+        self.gw.send.reset_mock()
+        await h.handle_incoming(PEER, "", {"command": "start"})
+        self.api.search.assert_awaited_with(PEER, "adult")
+        self.assertEqual([c.args[1] for c in self.gw.send.await_args_list], [h.SEARCHING_TEXT])
+
+    async def test_normal_chat_ends_dialog_and_searches_normal(self) -> None:
+        await h.handle_dating_find(PEER)
+        self.api.phase.return_value = "chatting"
+        self.api.stop = AsyncMock()
+        self.api.search.reset_mock()
+        self.gw.send.reset_mock()
+        await h.handle_incoming(PEER, "", {"command": "normal_chat"})
+        self.api.stop.assert_awaited_once_with(PEER)
+        self.api.search.assert_awaited_once_with(PEER)
+        self.assertNotIn(PEER, h._search_modes)
+        texts = [c.args[1] for c in self.gw.send.await_args_list]
+        self.assertEqual(texts, [h.NORMAL_NOTICE_TEXT, h.SEARCHING_TEXT])
+
+    async def test_normal_chat_while_searching_switches_search(self) -> None:
+        await h.handle_dating_find(PEER)
+        self.api.phase.return_value = "searching"
+        self.api.stop = AsyncMock()
+        self.api.search.reset_mock()
+        await h.handle_normal_chat(PEER)
+        self.api.stop.assert_awaited_once_with(PEER)
+        self.api.search.assert_awaited_once_with(PEER)
+        self.assertNotIn(PEER, h._search_modes)
+
+    async def test_normal_chat_outside_adult_is_safe(self) -> None:
+        self.api.stop = AsyncMock()
+        self.api.phase.return_value = "chatting"
+        await h.handle_normal_chat(PEER)
+        self.api.stop.assert_not_awaited()
+        self.api.search.assert_not_awaited()
+        self.api.phase.return_value = "idle"
+        await h.handle_normal_chat(PEER)
+        self.api.search.assert_awaited_once_with(PEER)
+
+
+class AdultKeyboardTests(unittest.TestCase):
+    def _labels(self, raw: str) -> list[list[str]]:
+        return [[b["action"]["label"] for b in row] for row in json.loads(raw)["buttons"]]
+
+    def test_chat_keyboard_has_normal_chat_only_in_adult(self) -> None:
+        from app import ui
+        from app.premium import PremiumOffer
+
+        offer = PremiumOffer(url="https://pay.example/x", active=False, until=None)
+        self.assertEqual(
+            self._labels(ui.build_chat_keyboard(offer, True)),
+            [["🔍 Новый собеседник"], ["💭 Обычный чат"], ["💎 Купить премиум"], ["Остановить диалог"]],
+        )
+        self.assertNotIn("💭 Обычный чат", sum(self._labels(ui.build_chat_keyboard(offer)), []))
+
+    def test_bottom_keyboard_second_row_in_adult(self) -> None:
+        from app import ui
+
+        self.assertEqual(self._labels(ui.build_bottom_keyboard(True))[1], ["💭 Обычный чат"])
+        self.assertNotIn("💭 Обычный чат", sum(self._labels(ui.build_bottom_keyboard()), []))
+
+
+class GatewayKeyboardTests(unittest.IsolatedAsyncioTestCase):
+    async def test_gateway_picks_keyboard_by_mode(self) -> None:
+        from app import gateway as g
+
+        h._search_modes.clear()
+        with patch.object(g, "premium_offer", AsyncMock(return_value=MagicMock(active=False, url="https://pay.example/x"))):
+            normal = await g.vk_keyboard("chat", PEER)
+            line_normal = await g.vk_keyboard("line", PEER)
+            h._search_modes[PEER] = "adult"
+            self.addCleanup(h._search_modes.clear)
+            adult = await g.vk_keyboard("chat", PEER)
+            line_adult = await g.vk_keyboard("line", PEER)
+        def has(raw: str) -> bool:
+            return any(b["action"]["label"] == "💭 Обычный чат" for row in json.loads(raw)["buttons"] for b in row)
+
+        self.assertFalse(has(normal) or has(line_normal))
+        self.assertTrue(has(adult) and has(line_adult))
 
 
 if __name__ == "__main__":

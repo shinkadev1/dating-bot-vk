@@ -10,6 +10,7 @@ import httpx
 from app import flow
 from app.peer import Peer
 from app.premium import PremiumOffer, premium_offer
+from app.search_mode import is_adult
 from app.ui import (
     COMMUNITY_GREETING,
     MEDIA_PREMIUM_TEXT,
@@ -42,9 +43,9 @@ async def vk_keyboard(kind: str, peer: Peer) -> str | None:
     эта клавиатура уходит при каждой новой паре.
     """
     if kind == "line":
-        return build_bottom_keyboard()
+        return build_bottom_keyboard(is_adult(peer))
     if kind == "chat":
-        return build_chat_keyboard(await premium_offer(peer))
+        return build_chat_keyboard(await premium_offer(peer), is_adult(peer))
     if kind == "partner_left":
         return build_partner_left_keyboard()
     if kind == "dating":

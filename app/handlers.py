@@ -21,6 +21,7 @@ from app.gateway import gateway, send_vk_greeting
 from app.media import store_vk_media
 from app.peer import Peer
 from app.premium import premium_offer
+from app.search_mode import ADULT_MODE, search_modes
 from app.ui import (
     AGE_TEXT,
     CHAT_BTN_NEXT,
@@ -35,6 +36,8 @@ from app.ui import (
     ROOMS,
     ROOMS_TEXT,
     SEARCHING_TEXT,
+    ADULT_NOTICE_TEXT,
+    NORMAL_NOTICE_TEXT,
     SERVICE_DOWN_TEXT,
     SETTINGS_TEXT,
     STOPPED_TEXT,
@@ -46,8 +49,7 @@ from app.ui import (
 SEARCH_TIMEOUT_SECONDS = 30
 _search_timeouts: dict[Peer, asyncio.Task[None]] = {}
 # Режим последнего поиска пользователя (adult — «Пошлый чат»); нет записи = обычный поиск.
-ADULT_MODE = "adult"
-_search_modes: dict[Peer, str] = {}
+_search_modes = search_modes
 _room_choice: dict[Peer, str] = {}
 _gender_choice: dict[Peer, str] = {}
 _age_choice: dict[Peer, str] = {}
@@ -61,7 +63,7 @@ _MAX_SCREEN_CHAIN = 8
 # Действия нижних кнопок: приходят в payload {"command": ...}. Текстом их набрать нельзя —
 # текст уходит собеседнику. Текстом работают только start, report, stop и next (токены из flow).
 _PAYLOAD_ACTIONS = frozenset(
-    {"dating", "dating_find", "dating_rooms", "dating_settings", "main", "premium"}
+    {"dating", "dating_find", "dating_rooms", "dating_settings", "main", "premium", "normal_chat"}
 )
 
 
@@ -127,6 +129,7 @@ async def stop_active(peer: Peer) -> None:
         result = await chat_api.stop(peer)
         promo = result.promo and not (await premium_offer(peer, fresh=True)).active
     cancel_search_timeout(peer)
+    _search_modes.pop(peer, None)
     if promo:
         await gateway.send_screen(peer, "stopped_promo")
         return
@@ -240,7 +243,7 @@ async def handle_incoming(
                 return
             _awaiting_age.discard(peer)
         if _is_start(text, payload):
-            await connect_with_partner(peer)
+            await _start_search(peer)
             return
         target = payload.get(flow.GOTO_KEY) if action == flow.GOTO_COMMAND else current.goto_for(_token(text))
         if isinstance(target, str) and target in current.screens:
@@ -529,6 +532,7 @@ async def _leave_queue_later(peer: Peer) -> None:
         if await chat_api.phase(peer) != "searching":
             return
         await chat_api.stop(peer)
+        _search_modes.pop(peer, None)
         await gateway.send(peer, NO_PARTNERS_TEXT, "main")
     except asyncio.CancelledError:
         raise
@@ -553,10 +557,28 @@ async def send_premium_gate(peer: Peer) -> None:
 async def handle_dating_find(peer: Peer) -> None:
     """Кнопка «Пошлый чат»: поиск в режиме adult; без премиума (403) — текст и промо."""
     try:
-        await connect_with_partner(peer, ADULT_MODE)
+        await connect_with_partner(peer, ADULT_MODE, ADULT_NOTICE_TEXT)
     except NotPremiumError:
         _search_modes.pop(peer, None)
         await send_premium_gate(peer)
+
+
+async def handle_normal_chat(peer: Peer) -> None:
+    """Кнопка «Обычный чат»: выход из «Пошлого чата». Диалог или поиск заканчиваются, дальше обычный поиск.
+
+    Вне пошлого режима кнопки нет: при простое ставит обычный поиск, иначе ничего не делает.
+    """
+    phase = await chat_api.phase(peer)
+    if not _search_modes.get(peer) == ADULT_MODE:
+        if phase == "idle":
+            await connect_with_partner(peer)
+        return
+    if phase != "idle":
+        await chat_api.stop(peer)
+    cancel_search_timeout(peer)
+    _search_modes.pop(peer, None)
+    await gateway.send(peer, NORMAL_NOTICE_TEXT, "line")
+    await connect_with_partner(peer)
 
 
 async def handle_dating(peer: Peer) -> None:
@@ -607,23 +629,31 @@ async def handle_report(peer: Peer) -> None:
     _search_timeouts[peer] = asyncio.create_task(_leave_queue_later(peer))
 
 
-async def connect_with_partner(peer: Peer, mode: str | None = None) -> None:
+async def connect_with_partner(peer: Peer, mode: str | None = None, notice: str | None = None) -> None:
     """Ставит в поиск. Второй стороне о паре и прежнему собеседнику об уходе пишет Chat API.
 
     mode запоминается: «Следующий собеседник» после пошлого диалога ищет в том же режиме.
-    Обычный поиск (mode=None) сбрасывает режим.
+    Обычный поиск (mode=None) сбрасывает режим. notice — текст перед «Ищем собеседника»
+    (вход в пошлый чат); уходит только после успешного старта поиска, уже с клавиатурой режима.
     """
     phase = await (chat_api.search(peer, mode) if mode else chat_api.search(peer))
     if mode:
         _search_modes[peer] = mode
     else:
         _search_modes.pop(peer, None)
+    if notice:
+        await gateway.send(peer, notice, "line")
     await gateway.send(peer, SEARCHING_TEXT, "line")
     cancel_search_timeout(peer)
     if phase == "chatting":
         await gateway.send(peer, FOUND_TEXT, "chat")
         return
     _search_timeouts[peer] = asyncio.create_task(_leave_queue_later(peer))
+
+
+async def _start_search(peer: Peer) -> None:
+    """Кнопка поиска: в пошлом режиме «Новый собеседник» остаётся в нём, иначе обычный поиск."""
+    await _next_partner(peer, False)
 
 
 async def _run_next(peer: Peer) -> None:
@@ -639,7 +669,7 @@ async def _show_chat(peer: Peer) -> None:
 # Действия, которые код умеет выполнять. Кнопка во flow.yaml с другим action — ошибка CI и старта.
 # Имя действия = command в payload кнопки; те же функции вызывают токены текста и переходы.
 _ACTION_RUNNERS: dict[str, Callable[[Peer], Awaitable[None]]] = {
-    "start": connect_with_partner,
+    "start": _start_search,
     "stop": stop_active,
     "report": handle_report,
     "next": _run_next,
@@ -649,6 +679,7 @@ _ACTION_RUNNERS: dict[str, Callable[[Peer], Awaitable[None]]] = {
     "dating_settings": handle_dating_settings,
     "main": handle_main_menu,
     "premium": handle_premium,
+    "normal_chat": handle_normal_chat,
 }
 ACTIONS = frozenset(_ACTION_RUNNERS)
 
