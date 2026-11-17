@@ -77,6 +77,14 @@ class DailyScreenTest(unittest.TestCase):
         self.assertIsNotNone(buttons[1].url)
         self.assertTrue(ui.uses_premium_link("daily_hello"))
 
+    def test_anya_screen_shape(self):
+        screen = flow.get().screen("daily_anya")
+        self.assertEqual(screen.keyboard, "inline")
+        self.assertEqual(screen.image, "images/daily_anya.jpg")
+        buttons = _buttons(screen)
+        self.assertEqual([b.text for b in buttons], ["💬 Начать чат"])
+        self.assertEqual(buttons[0].action, "start")
+
     def test_start_button_runs_search(self):
         runner = handlers._button_runner("start", {})
         self.assertIs(runner, handlers._start_search)

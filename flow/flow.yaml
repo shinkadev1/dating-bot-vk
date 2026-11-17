@@ -278,6 +278,21 @@ screens:
       x: 960
       y: 720
 
+  daily_anya:
+    title: "Ежедневная рассылка (Аня)"
+    image: "images/daily_anya.jpg"
+    text: "⚡️ Тебе хочет написать Аня, 26..."
+    keyboard: inline
+    # Размытая картинка так и задумана. Экран шлёт Chat API в событии notice с полем screen.
+    buttons:
+      - - text: "💬 Начать чат"
+          action: start
+          style: primary
+          next: chat
+    pos:
+      x: 960
+      y: 900
+
   photo_locked:
     title: "Фото собеседника (без премиума)"
     text: "🔒 Просмотр фото доступен только с премиумом"
